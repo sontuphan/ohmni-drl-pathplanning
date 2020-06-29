@@ -1,78 +1,25 @@
 import gym
-import torch
-from collections import namedtuple
-import random
+from PIL import Image
 import numpy as np
+import cv2 as cv
 import matplotlib.pyplot as plt
-import math
 
+import torch
+
+from src.nets import ConvNet, MobileNet
+from src.mem import ReplayMemory
+from src.policy import Policy
 
 MODEL_PATH = './model'
 GAMMA = 0.9  # Discount
 BATCH_SIZE = 64
 STEP_PER_EPOCH = 1024
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
 
 
-class NeuralNetwork(torch.nn.Module):
-    def __init__(self):
-        super(NeuralNetwork, self).__init__()
-        self.model = torch.nn.Sequential(
-            torch.nn.Linear(4, 64),
-            torch.nn.ReLU(),
-            torch.nn.Linear(64, 2),
-        )
-        self.loss_func = torch.nn.MSELoss(reduction='sum')
-        self.optimizer = torch.optim.Adam(self.model.parameters())
-
-    def forward(self, x):
-        return self.model(x)
-
-
-class ReplayMemory(object):
-    def __init__(self, batch_size=64):
-        self.batch_size = batch_size
-        self.capacity = self.batch_size*2
-        self.memory = []
-        self.position = 0
-
-    def __len__(self):
-        return len(self.memory)
-
-    def push(self, *args):
-        if len(self.memory) < self.capacity:
-            self.memory.append(None)
-        self.memory[self.position] = Transition(*args)
-        self.position = (self.position + 1) % self.capacity
-
-    def sample(self):
-        return random.sample(self.memory, self.batch_size)
-
-    def isFull(self):
-        return len(self.memory) >= self.capacity
-
-
-class Policy():
-    def __init__(self):
-        self.start_epsilon = 1
-        self.end_epsilon = 0.01
-        self.decay = 3000
-        self.steps = 0
-        self.action_space = [0, 1]
-
-    def get_epsilon(self):
-        epsilon = self.end_epsilon + (self.start_epsilon - self.end_epsilon) * \
-            math.exp(-1. * self.steps / self.decay)
-        return epsilon
-
-    def get_action(self, q_network, current_state):
-        self.steps += 1
-        if random.random() < self.get_epsilon():
-            return random.choice(self.action_space)
-        else:
-            q_values = q_network(current_state)
-            return torch.argmax(q_values, dim=-1).item()
+def convert_cv_to_pil(img):
+    img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+    im_pil = Image.fromarray(img)
+    return im_pil
 
 
 def plot_durations(durations, means, epsilons):
@@ -96,8 +43,8 @@ def plot_durations(durations, means, epsilons):
 if __name__ == "__main__":
 
     # Define networks
-    policy_net = NeuralNetwork()
-    target_net = NeuralNetwork()
+    policy_net = MobileNet()
+    target_net = MobileNet()
     target_net.load_state_dict(policy_net.state_dict())
 
     # Define policy
@@ -106,7 +53,7 @@ if __name__ == "__main__":
     # Define environment
     replaymem = ReplayMemory(BATCH_SIZE)
     env = gym.make("CartPole-v1")
-    state = env.reset()
+    env.reset()
 
     # Controllers
     duration = 0
@@ -117,11 +64,15 @@ if __name__ == "__main__":
 
     while True:
         duration += 1
-        env.render()
-        x = torch.from_numpy(state).float()
+        state = env.render(mode='rgb_array')
+        state = policy_net.normalize_data(state)
+        x = torch.unsqueeze(state, 0)
         action = policy.get_action(policy_net, x)
-        next_state, reward, _, _ = env.step(action)
-        replaymem.push(state, action, next_state, reward)
+        _, reward, _, _ = env.step(action)
+        next_state = env.render(mode='rgb_array')
+        next_state = policy_net.normalize_data(next_state)
+        # Add observation to memory
+        replaymem.push(state.numpy(), action, next_state.numpy(), reward)
 
         # Train
         if replaymem.isFull():
@@ -129,7 +80,7 @@ if __name__ == "__main__":
             steps += 1
             # Get a batch of data
             transitions = replaymem.sample()
-            batch = Transition(*zip(*transitions))
+            batch = replaymem.Transition(*zip(*transitions))
             (batch_states, batch_actions, batch_next_states, batch_rewards) = batch
             batch_states = torch.from_numpy(
                 np.array(batch_states, dtype=np.float64)).float()
@@ -146,7 +97,7 @@ if __name__ == "__main__":
             batch_expected_q_values = GAMMA*torch.max(target_net(
                 batch_next_states), dim=-1).values + batch_rewards
             # Calculate loss
-            loss = policy_net.loss_func(
+            loss = policy_net.criterion(
                 batch_predicted_q_values, batch_expected_q_values)
             # Gradient acsend
             policy_net.optimizer.zero_grad()
@@ -159,14 +110,16 @@ if __name__ == "__main__":
                 target_net.load_state_dict(policy_net.state_dict())
                 steps = 0
 
-        # Update state & env
-        state = next_state
+        # Update env
         if reward == 0:
             episode_durations = np.append(episode_durations, duration)
             episode_epsilons = np.append(
                 episode_epsilons, policy.get_epsilon())
-            episode_means = np.append(
-                episode_means, np.mean(episode_durations))
+            if len(episode_durations) > 1024:
+                episode_means = np.append(
+                    episode_means, np.mean(np.array(episode_durations)[-1024: -1]))
+            else:
+                episode_means = np.append(episode_means, 0)
             plot_durations(episode_durations, episode_means, episode_epsilons)
             duration = 0
             state = env.reset()
