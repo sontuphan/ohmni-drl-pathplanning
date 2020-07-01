@@ -6,7 +6,7 @@ class ExpectedReturn:
     def __init__(self):
         self.returns = None
 
-    def compute_avg_return(self, env, policy, num_episodes=10):
+    def compute_avg_return(self, env, policy, num_episodes):
         total_return = 0.0
         for _ in range(num_episodes):
             time_step = env.reset()
@@ -19,7 +19,7 @@ class ExpectedReturn:
         avg_return = total_return / num_episodes
         return avg_return.numpy()[0]
 
-    def eval(self, env, policy, num_episodes):
+    def eval(self, env, policy, num_episodes=10):
         avg_return = self.compute_avg_return(env, policy, num_episodes)
         if self.returns is None:
             self.returns = [avg_return]
@@ -27,14 +27,12 @@ class ExpectedReturn:
             self.returns.append(avg_return)
         return avg_return
 
-    def display(self, num_iterations, eval_interval):
-        iterations = range(0, num_iterations + 1, eval_interval)
-        plt.plot(iterations, self.returns)
+    def display(self):
+        plt.plot(self.returns)
         plt.ylabel('Average Return')
-        plt.xlabel('Iterations')
         plt.show()
 
-    def create_policy_eval_video(self, env, display, policy, filename, num_episodes=5):
+    def record(self, env, display, policy, filename, num_episodes=5):
         filename = filename + ".mp4"
         with imageio.get_writer(filename, fps=24) as video:
             for _ in range(num_episodes):

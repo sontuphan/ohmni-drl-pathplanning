@@ -7,7 +7,6 @@ from tf_agents.utils import common
 class DQN:
     def __init__(self, env):
         self.env = env
-        self.learning_rate = 1e-3
         self.q_net = q_network.QNetwork(
             self.env.observation_spec(),
             self.env.action_spec(),
