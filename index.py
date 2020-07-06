@@ -3,7 +3,7 @@ from tf_agents.policies import random_tf_policy
 from tf_agents.utils import common
 
 from src.env import CartPole
-from src.agent import DQN
+from src.agent import DQN_FC
 from src.buffer import ReplayBuffer
 from src.eval import ExpectedReturn
 
@@ -16,7 +16,7 @@ train_env, train_display = cartpole.gen_env()
 eval_env, eval_display = cartpole.gen_env()
 
 # Agent
-dqn = DQN(train_env)
+dqn = DQN_FC(train_env)
 train_step_counter = tf.Variable(0)
 agent = dqn.gen_agent(train_step_counter)
 
@@ -47,8 +47,8 @@ agent.train = common.function(agent.train)
 agent.train_step_counter.assign(0)
 criterion.eval(eval_env, agent.policy)
 
-num_iterations = 200
-collect_steps_per_iteration = 100
+num_iterations = 20000
+collect_steps_per_iteration = 1
 for _ in range(num_iterations):
     # Collect a few steps using collect_policy and save to the replay buffer.
     # You may ask why do not I see any env.reset() here
@@ -61,12 +61,12 @@ for _ in range(num_iterations):
     experience, unused_info = next(database)
     train_loss = agent.train(experience).loss
     step = agent.train_step_counter.numpy()
-    if step % 100 == 0:
+    if step % (num_iterations/50) == 0:
         print('step = {0}: loss = {1}'.format(step, train_loss))
-    if step % 1000 == 0:
+    if step % (num_iterations/10) == 0:
         avg_return = criterion.eval(eval_env, agent.policy)
         print('step = {0}: Average Return = {1}'.format(step, avg_return))
 
 # Visualization
 criterion.display()
-# criterion.record(eval_env, eval_display, agent.policy, "trained-agent")
+criterion.record(eval_env, eval_display, agent.policy, "trained-agent")
