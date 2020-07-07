@@ -4,6 +4,9 @@
 	<material name="black">
 		<color rgba="0 0 0 1" />
 	</material>
+	<material name="green">
+		<color rgba="0 1 0 1" />
+	</material>
 	<!-- Base link -->
 	<link name="base_link">
 		<inertial>
@@ -16,6 +19,7 @@
 			<geometry>
 				<mesh filename="meshes/base_link.STL" />
 			</geometry>
+			<material name="green" />
 		</visual>
 		<collision>
 			<origin xyz="0 0 0" rpy="0 0 0" />
@@ -84,6 +88,7 @@
 			<geometry>
 				<mesh filename="meshes/caster_link.STL" />
 			</geometry>
+			<material name="green" />
 		</visual>
 		<collision>
 			<origin xyz="0 0 0" rpy="0 0 0" />
@@ -167,6 +172,7 @@
 			<geometry>
 				<mesh filename="meshes/display_link.STL" />
 			</geometry>
+			<material name="green" />
 		</visual>
 		<collision>
 			<origin xyz="0 0 0" rpy="0 0 0" />

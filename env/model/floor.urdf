@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <robot name="simpleplane">
 	<!-- Colors -->
-	<material name="grey">
-		<color rgba="0.91 0.925 0.945 1" />
+	<material name="wood">
+		<color rgba="0.65 0.5 0.4 0.8" />
 	</material>
 	<!-- Plane -->
 	<link name="base_link">
@@ -11,7 +11,7 @@
 				<box size="20 20 0.01" />
 				<origin rpy="0 0 0" xyz="-10 -10 -0.005" />
 			</geometry>
-			<material name="grey" />
+			<material name="wood" />
 		</visual>
 		<collision>
 			<geometry>
