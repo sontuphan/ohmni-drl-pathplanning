@@ -15,8 +15,9 @@ def init_ws():
 
 def show():
     init_ws()
+    p.setRealTimeSimulation(1)
     angle = p.addUserDebugParameter('Steering', -0.5, 0.5, 0)
-    throttle = p.addUserDebugParameter('Throttle', 0, 1, 0)
+    throttle = p.addUserDebugParameter('Throttle', -0.5, 0.5, 0)
     floor(texture=True, wall=True)
     ohmniId, get_image = ohmni()
 
@@ -26,11 +27,10 @@ def show():
         user_throttle = p.readUserDebugParameter(throttle)
         left_wheel = VELOCITY*(user_throttle+user_angle)
         right_wheel = VELOCITY*(user_throttle-user_angle)
-        print(left_wheel, right_wheel)
         p.setJointMotorControl2(ohmniId, 0,
                                 p.VELOCITY_CONTROL,
                                 targetVelocity=left_wheel)
         p.setJointMotorControl2(ohmniId, 1,
                                 p.VELOCITY_CONTROL,
                                 targetVelocity=right_wheel)
-        p.stepSimulation()
+        # p.stepSimulation()

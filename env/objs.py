@@ -24,6 +24,7 @@ def ohmni():
     start_pos = [0, 0, 0.1]
     start_orientation = p.getQuaternionFromEuler([0, 0, 0])
     ohmniId = p.loadURDF('env/model/ohmni.urdf', start_pos, start_orientation)
+    # ohmniId = p.loadURDF('env/model/simplecar.urdf', start_pos, start_orientation)
 
     projection_matrix = p.computeProjectionMatrixFOV(
         fov=80.0, aspect=1.0, nearVal=0.01, farVal=50)

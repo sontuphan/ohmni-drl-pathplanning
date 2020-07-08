@@ -7,6 +7,9 @@
 	<material name="green">
 		<color rgba="0 1 0 1" />
 	</material>
+	<material name="red">
+		<color rgba="1 0 0 1" />
+	</material>
 	<!-- Base link -->
 	<link name="base_link">
 		<inertial>
@@ -19,7 +22,7 @@
 			<geometry>
 				<mesh filename="meshes/base_link.STL" />
 			</geometry>
-			<material name="green" />
+			<material name="red" />
 		</visual>
 		<collision>
 			<origin xyz="0 0 0" rpy="0 0 0" />
@@ -44,6 +47,7 @@
 			<geometry>
 				<mesh filename="meshes/wheel_link.STL" />
 			</geometry>
+			<contact_coefficients mu="1.0" kp="10000000.0" kd="1.0" />
 		</collision>
 	</link>
 	<joint name="left_wheel_joint" type="continuous">
@@ -68,6 +72,7 @@
 			<geometry>
 				<mesh filename="meshes/wheel_link.STL" />
 			</geometry>
+			<contact_coefficients mu="1.0" kp="10000000.0" kd="1.0" />
 		</collision>
 	</link>
 	<joint name="right_wheel_joint" type="continuous">
@@ -102,7 +107,6 @@
 		<parent link="base_link" />
 		<child link="caster_link" />
 		<axis xyz="0 0 1" />
-		<safety_controller k_velocity="0" />
 	</joint>
 	<!-- Caster wheel -->
 	<link name="caster_wheel_link">
@@ -124,13 +128,15 @@
 				<mesh filename="meshes/caster_wheel_link.STL" />
 			</geometry>
 		</collision>
+		<contact>
+			<lateral_friction value="0" />
+		</contact>
 	</link>
 	<joint name="caster_wheel_joint" type="continuous">
 		<origin xyz="-0.039059 0 -0.075" rpy="0 0 0" />
 		<parent link="caster_link" />
 		<child link="caster_wheel_link" />
 		<axis xyz="0 1 0" />
-		<safety_controller k_velocity="0" />
 	</joint>
 	<!-- Tube -->
 	<link name="tube_link">
@@ -158,7 +164,6 @@
 		<parent link="base_link" />
 		<child link="tube_link" />
 		<axis xyz="0 0 0" />
-		<safety_controller k_velocity="0" />
 	</joint>
 	<!-- Display -->
 	<link name="display_link">
@@ -185,7 +190,6 @@
 		<origin xyz="0.14191 0 1.1557" rpy="0 0 0" />
 		<parent link="tube_link" />
 		<child link="display_link" />
-		<axis xyz="0.0 1 0.0" />
-		<safety_controller k_velocity="0" />
+		<axis xyz="0 1 0" />
 	</joint>
 </robot>
