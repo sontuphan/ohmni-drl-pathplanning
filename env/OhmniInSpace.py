@@ -100,7 +100,7 @@ class Simulator:
                                 targetVelocity=right_wheel)
 
 
-class Environment:
+class PyEnv:
     def __init__(self, gui=False, image_shape=(96, 96)):
         self.throttle_range = THROTTLE_RANGE
         self.steering_range = STEERING_RANGE

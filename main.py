@@ -1,15 +1,15 @@
 import sys
 import cv2 as cv
-from env import test, OhmniInTemple
+from env import test, OhmniInSpace
 
 
 if sys.argv[1] == '--test':
     if sys.argv[2] == 'debug':
         test.show()
     if sys.argv[2] == 'gui':
-        oit = OhmniInTemple.Environment(gui=True)
+        oit = OhmniInSpace.PyEnv(gui=True)
     if sys.argv[2] == 'env':
-        oit = OhmniInTemple.Environment(gui=False)
+        oit = OhmniInSpace.PyEnv(gui=False)
         while True:
             img = oit.step(10, 10)
             cv.imshow('Segmentation', img)
