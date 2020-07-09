@@ -6,34 +6,45 @@ import numpy as np
 
 from env.objs import floor, ohmni, obstacle
 
-VELOCITY = 30
+VELOCITY = 15
 
 
-def init_ws():
-    clientId = p.connect(p.DIRECT)
+def init_ws(gui=False, timestep=None):
+    clientId = p.connect(p.GUI if gui else p.DIRECT)
     p.setGravity(0, 0, -10, physicsClientId=clientId)
+    if timestep is not None:
+        p.setTimeStep(timestep)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    return clientId
+    if gui:
+        throttle = p.addUserDebugParameter('Throttle', -1, 1, 0)
+        angle = p.addUserDebugParameter('Angle', -0.25, 0.25, 0)
+
+    def get_velocities():
+        user_angle = 0
+        user_throttle = 0
+        if gui:
+            user_throttle = p.readUserDebugParameter(throttle)
+            user_angle = p.readUserDebugParameter(angle)
+        return user_throttle, user_angle
+
+    return clientId, get_velocities
 
 
 def show():
-    init_ws()
-    # p.setRealTimeSimulation(1)
-    angle = p.addUserDebugParameter('Steering', -0.5, 0.5, 0)
-    throttle = p.addUserDebugParameter('Throttle', -0.5, 0.5, 0)
+    # Init bullet server
+    clientId, get_velocities = init_ws(gui=False, timestep=0.05)
+    # Add ground and ohmni
     floor(texture=True, wall=True)
     ohmniId, get_image = ohmni()
-    obstacle()
-    obstacle()
-    obstacle()
-    obstacle()
+    # Add obstacles at random positions
+    for i in range(4):
+        obstacle()
 
     while True:
         start = time.time()
 
         width, height, rgb_img, depth_img, seg_img = get_image((96, 96))
-        user_angle = p.readUserDebugParameter(angle)
-        user_throttle = p.readUserDebugParameter(throttle)
+        user_throttle, user_angle = get_velocities()
         left_wheel = VELOCITY*(user_throttle+user_angle)
         right_wheel = VELOCITY*(user_throttle-user_angle)
         p.setJointMotorControl2(ohmniId, 0,

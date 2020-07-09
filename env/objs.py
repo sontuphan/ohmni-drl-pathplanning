@@ -10,7 +10,7 @@ def plane():
 def floor(texture=False, wall=False):
     floorId = p.loadURDF('env/model/floor.urdf')
     if texture:
-        textureId = p.loadTexture('env/model/texture/xwood1.jpg')
+        textureId = p.loadTexture('env/model/texture/wood1.jpg')
         p.changeVisualShape(floorId, -1, textureUniqueId=textureId)
     if wall:
         p.loadURDF('samurai.urdf')
