@@ -1,5 +1,6 @@
 import pybullet as p
 import numpy as np
+import random
 
 
 def plane():
@@ -16,8 +17,14 @@ def floor(texture=False, wall=False):
     return floorId
 
 
-def car():
-    return p.loadURDF('env/model/car.urdf', [0, 0, 0.1])
+def obstacle(pos=None, dynamic=False):
+    static_obstacles = ['env/model/table/table.urdf',
+                        'husky/husky.urdf', 'sphere2.urdf']
+    dynamic_obstacles = ['cube_rotate.urdf']
+    obstacles = dynamic_obstacles if dynamic else static_obstacles
+    if pos is None:
+        pos = [random.randint(1, 9), random.randint(-2, 2), 0.5]
+    return p.loadURDF(random.choice(obstacles), pos)
 
 
 def ohmni():
