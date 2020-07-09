@@ -32,7 +32,7 @@ def init_ws(gui=False, timestep=None):
 
 def show():
     # Init bullet server
-    clientId, get_velocities = init_ws(gui=False, timestep=0.05)
+    clientId, get_velocities = init_ws(gui=True, timestep=0.05)
     # Add ground and ohmni
     floor(texture=True, wall=True)
     ohmniId, get_image = ohmni()
@@ -54,6 +54,12 @@ def show():
                                 p.VELOCITY_CONTROL,
                                 targetVelocity=right_wheel)
         p.stepSimulation()
+        position, _ = p.getBasePositionAndOrientation(ohmniId)
+        position = np.array(position, dtype=np.float)
+        destination = np.array([10, 0, 0], dtype=np.float)
+        state = np.linalg.norm(destination-position)
+        if state < 1:
+            break
         mask = np.minimum(seg_img, 1, dtype=np.float)
         cv.imshow('Segmentation', mask)
         if cv.waitKey(10) & 0xFF == ord('q'):

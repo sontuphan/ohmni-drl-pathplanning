@@ -13,7 +13,7 @@
 	<!-- Base link -->
 	<link name="base_link">
 		<inertial>
-			<origin xyz="-0.15 0.0 0.01" rpy="0.0 0.0 0.0" />
+			<origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
 			<mass value="5.5" />
 			<inertia ixx="0.03158" ixy="0" ixz="0" iyy="0.04418" iyz="0" izz="0.069898" />
 		</inertial>

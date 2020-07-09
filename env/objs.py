@@ -19,7 +19,8 @@ def floor(texture=False, wall=False):
 
 def obstacle(pos=None, dynamic=False):
     static_obstacles = ['env/model/table/table.urdf',
-                        'husky/husky.urdf', 'sphere2.urdf']
+                        'cube_no_rotation.urdf',
+                        'sphere2.urdf']
     dynamic_obstacles = ['cube_rotate.urdf']
     obstacles = dynamic_obstacles if dynamic else static_obstacles
     if pos is None:
