@@ -2,7 +2,7 @@ import pyvirtualdisplay
 from tf_agents.environments import suite_gym, tf_py_environment
 
 
-class CartPole:
+class TfEnv:
     def __init__(self, virtual=False):
         if virtual:
             pyvirtualdisplay.Display(visible=0, size=(1400, 900)).start()

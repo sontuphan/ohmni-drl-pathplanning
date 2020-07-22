@@ -2,7 +2,7 @@ import tensorflow as tf
 from tf_agents.policies import random_tf_policy
 from tf_agents.utils import common
 
-from src.env import CartPole
+from env import CartPole
 from src.agent import DQN_FC
 from src.buffer import ReplayBuffer
 from src.eval import ExpectedReturn
@@ -11,7 +11,7 @@ from src.eval import ExpectedReturn
 tf.compat.v1.enable_v2_behavior()
 
 # Environment
-cartpole = CartPole()
+cartpole = CartPole.TfEnv()
 train_env, train_display = cartpole.gen_env()
 eval_env, eval_display = cartpole.gen_env()
 
@@ -30,8 +30,8 @@ replay_buffer = ReplayBuffer(
     batch_size=train_env.batch_size,
 )
 # Initial data
-for step in range(100):
-    replay_buffer.collect(train_env, random_policy, step)
+for _ in range(100):
+    replay_buffer.collect(train_env, random_policy)
 # Create dataset
 database = replay_buffer.get_pipeline(
     num_parallel_calls=3,
@@ -55,8 +55,8 @@ for _ in range(num_iterations):
     # The unspoken info that the step() of tf_env will automatically
     # reset the env if it meets LAST_STATE
     # (refer https://www.tensorflow.org/agents/api_docs/python/tf_agents/environments/tf_py_environment/TFPyEnvironment#step)
-    for step in range(collect_steps_per_iteration):
-        replay_buffer.collect(train_env, agent.collect_policy, step)
+    for _ in range(collect_steps_per_iteration):
+        replay_buffer.collect(train_env, agent.collect_policy)
     # Sample a batch of data from the buffer and update the agent's network.
     experience, unused_info = next(database)
     train_loss = agent.train(experience).loss

@@ -14,7 +14,7 @@ class ReplayBuffer:
     def __len__(self):
         return self.buffer.num_frames()
 
-    def collect(self, env, policy, step=0):
+    def collect(self, env, policy):
         time_step = env.current_time_step()
         action_step = policy.action(time_step)
         next_time_step = env.step(action_step.action)
