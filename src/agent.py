@@ -33,10 +33,11 @@ class DQN_CNN:
         self.env = env
         self.input_shape = (96, 96)
         self.extractor = keras.applications.MobileNetV2(
-            input_shape=(self.input_shape + (3,)),
+            input_shape=(self.input_shape+(3,)),
             include_top=False,
             weights='imagenet'
         )
+        self.extractor.trainable = False
         self.q_net = q_network.QNetwork(
             self.env.observation_spec(),
             self.env.action_spec(),

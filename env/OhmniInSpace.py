@@ -21,10 +21,12 @@ class Env:
         self.timestep = 0.05
         self.num_of_obstacles = num_of_obstacles
         self.image_shape = image_shape
-        self.clientId, self.get_velocities = self._init_ws()
-        self.ohmniId, self.get_image = self._build()
-        self.LEFT_WHEEL = 0
-        self.RIGHT_WHEEL = 1
+        self.clientId, self._get_velocities = self._init_ws()
+        self._left_wheel_id = 0
+        self._right_wheel_id = 1
+
+        # Start for the first time
+        self._reset()
 
         if self.gui:
             self._start()
@@ -55,7 +57,7 @@ class Env:
                 physicsClientId=clientId)
 
         # Utility
-        def get_velocities():
+        def _get_velocities():
             user_throttle = 0
             user_steering = 0
             if self.gui:
@@ -65,7 +67,7 @@ class Env:
                     steering, physicsClientId=clientId)
             return user_throttle, user_steering
         # Return
-        return clientId, get_velocities
+        return clientId, _get_velocities
 
     def _build(self):
         """ Involving floor, ohmni, obstacles into the environment """
@@ -73,17 +75,17 @@ class Env:
         p.setGravity(0, 0, -10, physicsClientId=self.clientId)
         # Add plane and ohmni
         floor(self.clientId, texture=False, wall=False)
-        ohmniId, get_image = ohmni(self.clientId)
+        ohmniId, _get_image = ohmni(self.clientId)
         # Add obstacles at random positions
         for _ in range(self.num_of_obstacles):
             obstacle(self.clientId)
         # Return
-        return ohmniId, get_image
+        return ohmniId, _get_image
 
     def _start(self):
         """ This function is only called in gui mode """
         while True:
-            _, _, _, _, seg_img = self.get_image(self.image_shape)
+            _, _, _, _, seg_img = self.get_image()
             throttle, steering = self.get_velocities()
             left_wheel, right_wheel = throttle+steering, throttle-steering
             self.step(left_wheel, right_wheel)
@@ -95,23 +97,19 @@ class Env:
     def _reset(self):
         """ Remove all objects, then rebuild them """
         p.resetSimulation(physicsClientId=self.clientId)
-        self.ohmniId, self.get_image = self._build()
+        self.ohmniId, self._get_image = self._build()
 
-    def reset(self):
-        """ Reset the environment """
-        self._reset()
+    def get_image(self):
+        """ Get image from navigation camera """
+        if self._get_image is None:
+            raise ValueError('_get_image is undefined')
+        return self._get_image(self.image_shape)
 
-    def step(self, left_wheel, right_wheel):
-        """ Controllers for left/right wheels which are separate """
-        p.setJointMotorControl2(self.ohmniId, self.LEFT_WHEEL,
-                                p.VELOCITY_CONTROL,
-                                targetVelocity=left_wheel,
-                                physicsClientId=self.clientId)
-        p.setJointMotorControl2(self.ohmniId, self.RIGHT_WHEEL,
-                                p.VELOCITY_CONTROL,
-                                targetVelocity=right_wheel,
-                                physicsClientId=self.clientId)
-        p.stepSimulation(physicsClientId=self.clientId)
+    def get_velocities(self):
+        """ Get user's inputs for velo params from GUI """
+        if self._get_velocities is None:
+            raise ValueError('_get_image is undefined')
+        return self._get_velocities()
 
     def getContactPoints(self):
         """ Get Ohmni contacts """
@@ -121,16 +119,33 @@ class Env:
         """ Get Ohmni position and orientation """
         return p.getBasePositionAndOrientation(self.ohmniId, physicsClientId=self.clientId)
 
+    def reset(self):
+        """ Reset the environment """
+        self._reset()
+
+    def step(self, left_wheel, right_wheel):
+        """ Controllers for left/right wheels which are separate """
+        p.setJointMotorControl2(self.ohmniId, self._left_wheel_id,
+                                p.VELOCITY_CONTROL,
+                                targetVelocity=left_wheel,
+                                physicsClientId=self.clientId)
+        p.setJointMotorControl2(self.ohmniId, self._right_wheel_id,
+                                p.VELOCITY_CONTROL,
+                                targetVelocity=right_wheel,
+                                physicsClientId=self.clientId)
+        p.stepSimulation(physicsClientId=self.clientId)
+
 
 class PyEnv(py_environment.PyEnvironment):
     def __init__(self, gui=False, image_shape=(96, 96)):
         super(PyEnv, self).__init__()
         # Self-defined variables
-        self._image_shape = image_shape
+        self.image_shape = image_shape
+        self._image_dim = self.image_shape + (3,)
         # Steering: left_wheel_velocity - right_wheel_velocity
         self._num_of_obstacles = 5
         self._destination = np.array([10, 0, 0], dtype=np.float32)
-        self._duration = 500
+        self._max_steps = 500
         self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
@@ -140,19 +155,19 @@ class PyEnv(py_environment.PyEnvironment):
             name='action'
         )
         self._observation_spec = array_spec.BoundedArraySpec(
-            shape=self._image_shape, dtype=np.float32,
-            minimum=np.zeros(self._image_shape, dtype=np.float32),
-            maximum=np.zeros(self._image_shape, dtype=np.float32)+1,
+            shape=self._image_dim, dtype=np.float32,
+            minimum=np.zeros(self._image_dim, dtype=np.float32),
+            maximum=np.zeros(self._image_dim, dtype=np.float32)+1,
             name='observation'
         )
-        self._state = np.zeros(self._image_shape, dtype=np.float32)
-        self._img = np.zeros(self._image_shape, dtype=np.float32)
+        self._state = np.zeros(self._image_dim, dtype=np.float32)
+        self._img = np.zeros(self._image_dim, dtype=np.float32)
         self._episode_ended = False
         # Init bullet server
         self._env = Env(
             gui,
             num_of_obstacles=self._num_of_obstacles,
-            image_shape=self._image_shape
+            image_shape=self.image_shape
         )
 
     def _compute_reward(self):
@@ -190,24 +205,23 @@ class PyEnv(py_environment.PyEnvironment):
         self._num_steps = 0
         self._episode_ended = False
         self._env.reset()
-        return ts.restart(np.zeros(self._image_shape, dtype=np.float32))
+        return ts.restart(np.zeros(self._image_dim, dtype=np.float32))
 
     def _step(self, action=4):
         """ Step, action is steering value with mean value 4 """
         self._num_steps += 1
         # If ended, reset the environment
-        if self._episode_ended or self._num_steps > self._duration:
+        if self._episode_ended or self._num_steps > self._max_steps:
             return self.reset()
         # Step the environment
         left_wheel = THROTTLE_RANGE[1] + (action-4)/2
         right_wheel = THROTTLE_RANGE[1] - (action-4)/2
         self._env.step(left_wheel, right_wheel)
         # Compute and save states
-        _, _, rgb_img, _, seg_img = self._env.get_image(self._image_shape)
-        img = np.array(rgb_img, dtype=np.float32)/255
-        self._img = img
+        _, _, rgb_img, _, seg_img = self._env.get_image()
+        self._img = np.array(rgb_img, dtype=np.float32)/255
         mask = np.minimum(seg_img, 1, dtype=np.float32)
-        self._state = mask
+        self._state = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
         self._episode_ended, reward = self._compute_reward()
         # Transition
         if self._episode_ended:
