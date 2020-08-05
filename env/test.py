@@ -34,11 +34,11 @@ def show():
     # Init bullet server
     clientId, get_velocities = init_ws(gui=True, timestep=0.05)
     # Add ground and ohmni
-    floor(texture=True, wall=True)
-    ohmniId, get_image = ohmni()
+    floor(clientId, texture=True, wall=True)
+    ohmniId, get_image = ohmni(clientId)
     # Add obstacles at random positions
     for i in range(4):
-        obstacle()
+        obstacle(clientId)
 
     while True:
         start = time.time()

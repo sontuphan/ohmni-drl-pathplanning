@@ -21,7 +21,7 @@ class Env:
         self.timestep = 0.05
         self.num_of_obstacles = num_of_obstacles
         self.image_shape = image_shape
-        self.clientId, self._get_velocities = self._init_ws()
+        self.clientId, self._get_velocities_from_gui = self._init_ws()
         self._left_wheel_id = 0
         self._right_wheel_id = 1
 
@@ -57,7 +57,7 @@ class Env:
                 physicsClientId=clientId)
 
         # Utility
-        def _get_velocities():
+        def _get_velocities_from_gui():
             user_throttle = 0
             user_steering = 0
             if self.gui:
@@ -67,26 +67,26 @@ class Env:
                     steering, physicsClientId=clientId)
             return user_throttle, user_steering
         # Return
-        return clientId, _get_velocities
+        return clientId, _get_velocities_from_gui
 
     def _build(self):
-        """ Involving floor, ohmni, obstacles into the environment """
+        """ Including floor, ohmni, obstacles into the environment """
         # Add gravity
         p.setGravity(0, 0, -10, physicsClientId=self.clientId)
         # Add plane and ohmni
         floor(self.clientId, texture=False, wall=False)
-        ohmniId, _get_image = ohmni(self.clientId)
+        ohmniId, _capture_image = ohmni(self.clientId)
         # Add obstacles at random positions
         for _ in range(self.num_of_obstacles):
             obstacle(self.clientId)
         # Return
-        return ohmniId, _get_image
+        return ohmniId, _capture_image
 
     def _start(self):
         """ This function is only called in gui mode """
         while True:
-            _, _, _, _, seg_img = self.get_image()
-            throttle, steering = self.get_velocities()
+            _, _, _, _, seg_img = self.capture_image()
+            throttle, steering = self.capture_velocities()
             left_wheel, right_wheel = throttle+steering, throttle-steering
             self.step(left_wheel, right_wheel)
             mask = np.minimum(seg_img, 1, dtype=np.float32)
@@ -97,19 +97,19 @@ class Env:
     def _reset(self):
         """ Remove all objects, then rebuild them """
         p.resetSimulation(physicsClientId=self.clientId)
-        self.ohmniId, self._get_image = self._build()
+        self.ohmniId, self._capture_image = self._build()
 
-    def get_image(self):
+    def capture_image(self):
         """ Get image from navigation camera """
-        if self._get_image is None:
-            raise ValueError('_get_image is undefined')
-        return self._get_image(self.image_shape)
+        if self._capture_image is None:
+            raise ValueError('_capture_image is undefined')
+        return self._capture_image(self.image_shape)
 
-    def get_velocities(self):
+    def capture_velocities(self):
         """ Get user's inputs for velo params from GUI """
-        if self._get_velocities is None:
-            raise ValueError('_get_image is undefined')
-        return self._get_velocities()
+        if self._get_velocities_from_gui is None:
+            raise ValueError('_get_velocities_from_gui is undefined')
+        return self._get_velocities_from_gui()
 
     def getContactPoints(self):
         """ Get Ohmni contacts """
@@ -163,6 +163,7 @@ class PyEnv(py_environment.PyEnvironment):
         self._state = np.zeros(self._image_dim, dtype=np.float32)
         self._img = np.zeros(self._image_dim, dtype=np.float32)
         self._episode_ended = False
+        self._discount = 0.9
         # Init bullet server
         self._env = Env(
             gui,
@@ -218,7 +219,7 @@ class PyEnv(py_environment.PyEnvironment):
         right_wheel = THROTTLE_RANGE[1] - (action-4)/2
         self._env.step(left_wheel, right_wheel)
         # Compute and save states
-        _, _, rgb_img, _, seg_img = self._env.get_image()
+        _, _, rgb_img, _, seg_img = self._env.capture_image()
         self._img = np.array(rgb_img, dtype=np.float32)/255
         mask = np.minimum(seg_img, 1, dtype=np.float32)
         self._state = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
@@ -227,7 +228,7 @@ class PyEnv(py_environment.PyEnvironment):
         if self._episode_ended:
             return ts.termination(self._state, reward)
         else:
-            return ts.transition(self._state, reward, discount=1.0)
+            return ts.transition(self._state, reward, discount=self._discount)
 
     def action_spec(self):
         """ Return action specs """
