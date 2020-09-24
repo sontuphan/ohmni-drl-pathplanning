@@ -149,9 +149,9 @@ class PyEnv(py_environment.PyEnvironment):
         self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(), dtype=np.int32,
-            minimum=STEERING_RANGE[0],
-            maximum=STEERING_RANGE[1],
+            shape=(2,), dtype=np.int32,
+            minimum=[THROTTLE_RANGE[0], THROTTLE_RANGE[0]],
+            maximum=[THROTTLE_RANGE[1], THROTTLE_RANGE[1]],
             name='action'
         )
         self._observation_spec = array_spec.BoundedArraySpec(
@@ -208,15 +208,14 @@ class PyEnv(py_environment.PyEnvironment):
         self._env.reset()
         return ts.restart(np.zeros(self._image_dim, dtype=np.float32))
 
-    def _step(self, action=4):
-        """ Step, action is steering value with mean value 4 """
+    def _step(self, action):
+        """ Step, action is velocities of left/right wheel """
         self._num_steps += 1
         # If ended, reset the environment
         if self._episode_ended or self._num_steps > self._max_steps:
             return self.reset()
         # Step the environment
-        left_wheel = THROTTLE_RANGE[1] + (action-4)/2
-        right_wheel = THROTTLE_RANGE[1] - (action-4)/2
+        (left_wheel, right_wheel) = action
         self._env.step(left_wheel, right_wheel)
         # Compute and save states
         _, _, rgb_img, _, seg_img = self._env.capture_image()

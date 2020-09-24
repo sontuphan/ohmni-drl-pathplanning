@@ -13,7 +13,7 @@ if sys.argv[1] == '--test':
     if sys.argv[2] == 'py-env':
         oit = OhmniInSpace.PyEnv(gui=False)
         while True:
-            _, reward, _, observation = oit.step(action=4)
+            _, reward, _, observation = oit.step(action=(10, 10))
             oit.render()
             cv.imshow('Segmentation', observation)
             if cv.waitKey(10) & 0xFF == ord('q'):

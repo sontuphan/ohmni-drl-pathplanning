@@ -3,7 +3,7 @@ from tf_agents.policies import random_tf_policy
 from tf_agents.utils import common
 
 from env import OhmniInSpace
-from src.agent import DQN_CNN
+from src.agent import REINFORCE
 from src.buffer import ReplayBuffer
 from src.eval import ExpectedReturn
 
@@ -14,13 +14,13 @@ tf.compat.v1.enable_v2_behavior()
 def train():
     # Environment
     oit = OhmniInSpace.TfEnv()
-    train_env, train_display = oit.gen_env()
+    train_env, _ = oit.gen_env()
     eval_env, eval_display = oit.gen_env()
 
     # Agent
-    dqn = DQN_CNN(train_env)
+    algo = REINFORCE(train_env)
     train_step_counter = tf.Variable(0)
-    agent = dqn.gen_agent(train_step_counter)
+    agent = algo.gen_agent(train_step_counter)
 
     # Policy
     random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
