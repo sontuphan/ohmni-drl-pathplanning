@@ -39,7 +39,7 @@ def train():
     agent.train_step_counter.assign(0)
     criterion.eval(eval_env, agent.policy)
 
-    num_iterations = 1
+    num_iterations = 500
     for _ in range(num_iterations):
         replay_buffer.collect_episode(train_env, agent.collect_policy, 2)
         experience = replay_buffer.buffer.gather_all()
@@ -48,8 +48,8 @@ def train():
         step = agent.train_step_counter.numpy()
         if step % 1 == 0:
             print('step = {0}: loss = {1}'.format(step, train_loss))
-        if step % 1 == 0:
-            avg_return = criterion.eval(eval_env, agent.policy, num_episodes=1)
+        if step % 10 == 0:
+            avg_return = criterion.eval(eval_env, agent.policy)
             print('step = {0}: Average Return = {1}'.format(step, avg_return))
 
     # Visualization
