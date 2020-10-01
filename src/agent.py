@@ -13,6 +13,8 @@ class REINFORCE:
         self.net = actor_distribution_network.ActorDistributionNetwork(
             self.env.observation_spec(),
             self.env.action_spec(),
+            conv_layer_params=[(32, 5, 1), (64, 5, 2),
+                               (128, 5, 2), (256, 5, 2)],
             fc_layer_params=(64, 2))
         self.optimizer = tf.compat.v1.train.AdamOptimizer(
             learning_rate=1e-3)
