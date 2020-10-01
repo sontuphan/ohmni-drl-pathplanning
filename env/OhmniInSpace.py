@@ -2,7 +2,6 @@ import pybullet as p
 import pybullet_data
 import numpy as np
 import cv2 as cv
-import pyvirtualdisplay
 
 from tf_agents.environments import py_environment
 from tf_agents.environments import tf_py_environment
@@ -11,8 +10,8 @@ from tf_agents.trajectories import time_step as ts
 
 from env.objs import floor, ohmni, obstacle
 
-THROTTLE_RANGE = [-15, 15]
-STEERING_RANGE = [0, 8]
+VELOCITY_COEFFICIENT = 15
+THROTTLE_RANGE = [-1, 1]
 
 
 class Env:
@@ -21,15 +20,12 @@ class Env:
         self.timestep = 0.05
         self.num_of_obstacles = num_of_obstacles
         self.image_shape = image_shape
-        self.clientId, self._get_velocities_from_gui = self._init_ws()
+        self.clientId = self._init_ws()
         self._left_wheel_id = 0
         self._right_wheel_id = 1
 
         # Start for the first time
         self._reset()
-
-        if self.gui:
-            self._start()
 
     def _init_ws(self):
         """
@@ -44,30 +40,9 @@ class Env:
         p.setAdditionalSearchPath(
             pybullet_data.getDataPath(), physicsClientId=clientId)
         p.setTimeStep(self.timestep, physicsClientId=clientId)
-        # Set debug parameters for GUI mode
-        throttle, steering = None, None
-        if self.gui:
-            throttle = p.addUserDebugParameter(
-                'Throttle',
-                THROTTLE_RANGE[0], THROTTLE_RANGE[1], 0,
-                physicsClientId=clientId)
-            steering = p.addUserDebugParameter(
-                'Steering',
-                STEERING_RANGE[0], STEERING_RANGE[1], 0,
-                physicsClientId=clientId)
 
-        # Utility
-        def _get_velocities_from_gui():
-            user_throttle = 0
-            user_steering = 0
-            if self.gui:
-                user_throttle = p.readUserDebugParameter(
-                    throttle, physicsClientId=clientId)
-                user_steering = p.readUserDebugParameter(
-                    steering, physicsClientId=clientId)
-            return user_throttle, user_steering
         # Return
-        return clientId, _get_velocities_from_gui
+        return clientId
 
     def _build(self):
         """ Including floor, ohmni, obstacles into the environment """
@@ -82,18 +57,6 @@ class Env:
         # Return
         return ohmniId, _capture_image
 
-    def _start(self):
-        """ This function is only called in gui mode """
-        while True:
-            _, _, _, _, seg_img = self.capture_image()
-            throttle, steering = self.capture_velocities()
-            left_wheel, right_wheel = throttle+steering, throttle-steering
-            self.step(left_wheel, right_wheel)
-            mask = np.minimum(seg_img, 1, dtype=np.float32)
-            cv.imshow('Segmentation', mask)
-            if cv.waitKey(10) & 0xFF == ord('q'):
-                break
-
     def _reset(self):
         """ Remove all objects, then rebuild them """
         p.resetSimulation(physicsClientId=self.clientId)
@@ -104,12 +67,6 @@ class Env:
         if self._capture_image is None:
             raise ValueError('_capture_image is undefined')
         return self._capture_image(self.image_shape)
-
-    def capture_velocities(self):
-        """ Get user's inputs for velo params from GUI """
-        if self._get_velocities_from_gui is None:
-            raise ValueError('_get_velocities_from_gui is undefined')
-        return self._get_velocities_from_gui()
 
     def getContactPoints(self):
         """ Get Ohmni contacts """
@@ -125,6 +82,10 @@ class Env:
 
     def step(self, left_wheel, right_wheel):
         """ Controllers for left/right wheels which are separate """
+        # Normalize velocities
+        left_wheel = left_wheel*VELOCITY_COEFFICIENT
+        right_wheel = right_wheel*VELOCITY_COEFFICIENT
+        # Step
         p.setJointMotorControl2(self.ohmniId, self._left_wheel_id,
                                 p.VELOCITY_CONTROL,
                                 targetVelocity=left_wheel,
@@ -139,17 +100,17 @@ class Env:
 class PyEnv(py_environment.PyEnvironment):
     def __init__(self, gui=False, image_shape=(96, 96)):
         super(PyEnv, self).__init__()
-        # Self-defined variables
+        # Parameters
         self.image_shape = image_shape
         self._image_dim = self.image_shape + (3,)
-        # Steering: left_wheel_velocity - right_wheel_velocity
+        # Self-defined variables
         self._num_of_obstacles = 5
         self._destination = np.array([10, 0, 0], dtype=np.float32)
         self._max_steps = 500
         self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(2,), dtype=np.int32,
+            shape=(2,), dtype=np.float32,
             minimum=[THROTTLE_RANGE[0], THROTTLE_RANGE[0]],
             maximum=[THROTTLE_RANGE[1], THROTTLE_RANGE[1]],
             name='action'
@@ -157,7 +118,7 @@ class PyEnv(py_environment.PyEnvironment):
         self._observation_spec = array_spec.BoundedArraySpec(
             shape=self._image_dim, dtype=np.float32,
             minimum=np.zeros(self._image_dim, dtype=np.float32),
-            maximum=np.zeros(self._image_dim, dtype=np.float32)+1,
+            maximum=np.full(self._image_dim, 1, dtype=np.float32),
             name='observation'
         )
         self._state = np.zeros(self._image_dim, dtype=np.float32)
@@ -210,10 +171,10 @@ class PyEnv(py_environment.PyEnvironment):
 
     def _step(self, action):
         """ Step, action is velocities of left/right wheel """
-        self._num_steps += 1
-        # If ended, reset the environment
-        if self._episode_ended or self._num_steps > self._max_steps:
+        # Reset if ended
+        if self._episode_ended:
             return self.reset()
+        self._num_steps += 1
         # Step the environment
         (left_wheel, right_wheel) = action
         self._env.step(left_wheel, right_wheel)
@@ -223,6 +184,10 @@ class PyEnv(py_environment.PyEnvironment):
         mask = np.minimum(seg_img, 1, dtype=np.float32)
         self._state = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
         self._episode_ended, reward = self._compute_reward()
+        # If exceed the limitation of steps, return rewards
+        if self._num_steps > self._max_steps:
+            self._episode_ended = True
+            return ts.termination(self._state, reward)
         # Transition
         if self._episode_ended:
             return ts.termination(self._state, reward)
@@ -247,13 +212,11 @@ class PyEnv(py_environment.PyEnvironment):
 
 
 class TfEnv():
-    def __init__(self, virtual=False):
-        if virtual:
-            pyvirtualdisplay.Display(visible=0, size=(1400, 900)).start()
+    def __init__(self):
         self.name = 'OhmniInSpace-v0'
 
-    def gen_env(self):
+    def gen_env(self, gui=False):
         """ Convert pyenv to tfenv """
-        display = PyEnv()
-        env = tf_py_environment.TFPyEnvironment(display)
-        return env, display
+        pyenv = PyEnv(gui=gui)
+        tfenv = tf_py_environment.TFPyEnvironment(pyenv)
+        return tfenv

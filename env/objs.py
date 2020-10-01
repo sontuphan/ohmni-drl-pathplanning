@@ -8,7 +8,7 @@ def plane(clientId):
 
 
 def floor(clientId, texture=False, wall=False):
-    floorId = p.loadURDF('env/model/floor.urdf')
+    floorId = p.loadURDF('env/model/floor.urdf', physicsClientId=clientId)
     if texture:
         textureId = p.loadTexture(
             'env/model/texture/wood1.jpg', physicsClientId=clientId)

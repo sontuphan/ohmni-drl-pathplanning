@@ -1,5 +1,5 @@
+import os
 import tensorflow as tf
-from tf_agents.policies import random_tf_policy
 from tf_agents.utils import common
 
 from env import OhmniInSpace
@@ -7,38 +7,28 @@ from src.agent import REINFORCE
 from src.buffer import ReplayBuffer
 from src.eval import ExpectedReturn
 
+# Saving dir
+saving_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '../models/policy')
 # Compulsory config for tf_agents
 tf.compat.v1.enable_v2_behavior()
 
 
 def train():
     # Environment
-    oit = OhmniInSpace.TfEnv()
-    train_env, _ = oit.gen_env()
-    eval_env, eval_display = oit.gen_env()
+    tfenv = OhmniInSpace.TfEnv()
+    train_env = tfenv.gen_env()
+    eval_env = tfenv.gen_env()
 
     # Agent
     algo = REINFORCE(train_env)
     train_step_counter = tf.Variable(0)
     agent = algo.gen_agent(train_step_counter)
 
-    # Policy
-    random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
-                                                    train_env.action_spec())
-
     # Replay buffer
     replay_buffer = ReplayBuffer(
         agent.collect_data_spec,
         batch_size=train_env.batch_size,
-    )
-    # Initial data
-    for _ in range(100):
-        replay_buffer.collect(train_env, random_policy)
-    # Create dataset
-    database = replay_buffer.get_pipeline(
-        num_parallel_calls=3,
-        num_steps=2,
-        num_prefetch=3
     )
 
     # Metrics and Evaluation
@@ -49,20 +39,27 @@ def train():
     agent.train_step_counter.assign(0)
     criterion.eval(eval_env, agent.policy)
 
-    num_iterations = 20000
-    collect_steps_per_iteration = 1
+    num_iterations = 1
     for _ in range(num_iterations):
-        for _ in range(collect_steps_per_iteration):
-            replay_buffer.collect(train_env, agent.collect_policy)
-        experience, unused_info = next(database)
+        replay_buffer.collect_episode(train_env, agent.collect_policy, 2)
+        experience = replay_buffer.buffer.gather_all()
         train_loss = agent.train(experience).loss
+        replay_buffer.buffer.clear()
         step = agent.train_step_counter.numpy()
-        if step % (num_iterations/50) == 0:
+        if step % 1 == 0:
             print('step = {0}: loss = {1}'.format(step, train_loss))
-        if step % (num_iterations/10) == 0:
-            avg_return = criterion.eval(eval_env, agent.policy)
+        if step % 1 == 0:
+            avg_return = criterion.eval(eval_env, agent.policy, num_episodes=1)
             print('step = {0}: Average Return = {1}'.format(step, avg_return))
 
     # Visualization
-    criterion.display()
-    criterion.record(eval_env, eval_display, agent.policy, "trained-agent")
+    criterion.save()
+    REINFORCE.save_policy(agent.policy, saving_dir)
+
+
+def run():
+    tfenv = OhmniInSpace.TfEnv()
+    env = tfenv.gen_env(gui=True)
+    criterion = ExpectedReturn()
+    policy = REINFORCE.load_policy(saving_dir)
+    criterion.run(env, policy)
