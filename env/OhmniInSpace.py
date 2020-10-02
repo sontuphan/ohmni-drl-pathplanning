@@ -105,7 +105,7 @@ class PyEnv(py_environment.PyEnvironment):
         self._image_dim = self.image_shape + (3,)
         # Self-defined variables
         self._num_of_obstacles = 5
-        self._destination = np.array([3, 0, 0], dtype=np.float32)
+        self._destination = np.array([2, 0, 0], dtype=np.float32)
         self._max_steps = 250
         self._num_steps = 0
         # PyEnvironment variables
