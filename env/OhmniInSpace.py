@@ -105,8 +105,8 @@ class PyEnv(py_environment.PyEnvironment):
         self._image_dim = self.image_shape + (3,)
         # Self-defined variables
         self._num_of_obstacles = 5
-        self._destination = np.array([10, 0, 0], dtype=np.float32)
-        self._max_steps = 500
+        self._destination = np.array([3, 0, 0], dtype=np.float32)
+        self._max_steps = 250
         self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
@@ -139,28 +139,18 @@ class PyEnv(py_environment.PyEnvironment):
         distance = np.linalg.norm(position-self._destination)
         # Ohmni reach the destination
         if distance < 1:
-            return True, 10
-        # Compute current reward
-        reward = 0
-        if distance < 10:
-            reward = 10 - distance
-        else:
-            reward = 0
+            return True, 1
         # Stop if detecting collision
         collision = self._env.getContactPoints()
         for contact in collision:
             # Contact with things different from floor
             if contact[2] != 0:
-                return True, reward
+                return True, -1
         # Stop if Ohmni fall out of the environment
-        if position[0] >= 10 or position[0] <= -10:
-            return True, reward
-        if position[1] >= 10 or position[1] <= -10:
-            return True, reward
         if position[2] >= 0.5 or position[2] <= -0.5:
-            return True, reward
+            return True, 0
         # Ohmni on his way
-        return False, reward
+        return False, 0
 
     def _reset(self):
         """ Reset """

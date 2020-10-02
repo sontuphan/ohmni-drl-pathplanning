@@ -30,10 +30,3 @@ class ExpectedReturn:
         plt.plot(self.returns)
         plt.ylabel('Average Return')
         plt.savefig('eval.jpg')
-
-    def run(self, pyenv, policy):
-        time_step = pyenv.reset()
-        while True:
-            action_step = policy.action(time_step)
-            print('Action:', action_step)
-            time_step = pyenv.step(action_step.action)

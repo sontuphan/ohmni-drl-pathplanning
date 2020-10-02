@@ -39,7 +39,7 @@ def train():
     agent.train_step_counter.assign(0)
     criterion.eval(eval_env, agent.policy)
 
-    num_iterations = 500
+    num_iterations = 100
     for _ in range(num_iterations):
         replay_buffer.collect_episode(train_env, agent.collect_policy, 2)
         experience = replay_buffer.buffer.gather_all()
@@ -60,6 +60,9 @@ def train():
 def run():
     tfenv = OhmniInSpace.TfEnv()
     env = tfenv.gen_env(gui=True)
-    criterion = ExpectedReturn()
     policy = REINFORCE.load_policy(saving_dir)
-    criterion.run(env, policy)
+    time_step = env.reset()
+    while True:
+        action_step = policy.action(time_step)
+        print('Action:', action_step)
+        time_step = env.step(action_step.action)

@@ -9,10 +9,14 @@ if sys.argv[1] == '--test':
     if sys.argv[2] == 'py-env':
         ois = OhmniInSpace.PyEnv(gui=True)
         timestep = ois.reset()
-        while not timestep.is_last():
+        counter = 0
+        while True:
+            if timestep.is_last():
+                counter = 0
+            counter += 1
             timestep = ois.step(action=(0.4, 0.4))
             (_, reward, discount, observation) = timestep
-            print('Reward:', reward)
+            print('Step {} / Reward {}', counter, reward)
             ois.render()
             cv.imshow('Segmentation', observation)
             if cv.waitKey(10) & 0xFF == ord('q'):
