@@ -106,7 +106,7 @@ class PyEnv(py_environment.PyEnvironment):
         # Self-defined variables
         self._num_of_obstacles = 5
         self._destination = np.array([10, 0, 0], dtype=np.float32)
-        self._max_steps = 1000
+        self._max_steps = 500
         self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
