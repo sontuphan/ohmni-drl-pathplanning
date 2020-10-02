@@ -39,7 +39,7 @@ def train():
     agent.train_step_counter.assign(0)
     criterion.eval(eval_env, agent.policy)
 
-    num_iterations = 100
+    num_iterations = 10000
     for _ in range(num_iterations):
         replay_buffer.collect_episode(train_env, agent.collect_policy, 2)
         experience = replay_buffer.buffer.gather_all()
