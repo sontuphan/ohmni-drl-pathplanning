@@ -105,8 +105,8 @@ class PyEnv(py_environment.PyEnvironment):
         self._image_dim = self.image_shape + (3,)
         # Self-defined variables
         self._num_of_obstacles = 5
-        self._destination = np.array([2, 0, 0], dtype=np.float32)
-        self._max_steps = 250
+        self._destination = np.array([10, 0, 0], dtype=np.float32)
+        self._max_steps = 1000
         self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
@@ -132,25 +132,41 @@ class PyEnv(py_environment.PyEnvironment):
             image_shape=self.image_shape
         )
 
-    def _compute_reward(self):
-        """ Compute reward and return (<stopped>, <reward>) """
+    def _normalized_distance_to_destination(self):
+        """ Compute the distance from agent to destination """
         position, _ = self._env.getBasePositionAndOrientation()
         position = np.array(position, dtype=np.float32)
         distance = np.linalg.norm(position-self._destination)
-        # Ohmni reach the destination
-        if distance < 1:
-            return True, 1
-        # Stop if detecting collision
+        origin = np.linalg.norm(np.zeros([3])-self._destination)
+        return min(distance/origin, 1)
+
+    def _is_fatal(self):
+        """ Compute whether there are collisions or not """
+        position, _ = self._env.getBasePositionAndOrientation()
+        position = np.array(position, dtype=np.float32)
         collision = self._env.getContactPoints()
         for contact in collision:
             # Contact with things different from floor
             if contact[2] != 0:
-                return True, -1
-        # Stop if Ohmni fall out of the environment
+                return True
+        # Ohmni felt out of the environment
         if position[2] >= 0.5 or position[2] <= -0.5:
-            return True, 0
+            return True
+        return False
+
+    def _compute_reward(self):
+        """ Compute reward and return (<stopped>, <reward>) """
+        normalized_distance = self._normalized_distance_to_destination()
+        # Reward shaping
+        shaped_reward = 1 - normalized_distance
+        # Ohmni reach the destination
+        if normalized_distance < 0.1:
+            return True, shaped_reward + (self._max_steps-self._num_steps)
+        # Stop if detecting collisions or a fall
+        if self._is_fatal():
+            return True, shaped_reward - 1
         # Ohmni on his way
-        return False, 0
+        return False, shaped_reward
 
     def _reset(self):
         """ Reset """

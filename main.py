@@ -16,7 +16,7 @@ if sys.argv[1] == '--test':
             counter += 1
             timestep = ois.step(action=(0.4, 0.4))
             (_, reward, discount, observation) = timestep
-            print('Step {} / Reward {}', counter, reward)
+            print('Step {} / Reward {}'.format(counter, reward))
             ois.render()
             cv.imshow('Segmentation', observation)
             if cv.waitKey(10) & 0xFF == ord('q'):
