@@ -142,7 +142,7 @@ class PyEnv(py_environment.PyEnvironment):
 
     def _is_fatal(self):
         """ Compute whether there are collisions or not """
-        position, _ = self._env.getBasePositionAndOrientation()
+        position, orientation = self._env.getBasePositionAndOrientation()
         position = np.array(position, dtype=np.float32)
         collision = self._env.getContactPoints()
         for contact in collision:
@@ -151,6 +151,9 @@ class PyEnv(py_environment.PyEnvironment):
                 return True
         # Ohmni felt out of the environment
         if position[2] >= 0.5 or position[2] <= -0.5:
+            return True
+        # Ohmni felt down
+        if orientation[3] < 0.8:
             return True
         return False
 
@@ -190,6 +193,7 @@ class PyEnv(py_environment.PyEnvironment):
         mask = np.minimum(seg_img, 1, dtype=np.float32)
         self._state = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
         self._episode_ended, reward = self._compute_reward()
+        print(reward)
         # If exceed the limitation of steps, return rewards
         if self._num_steps > self._max_steps:
             self._episode_ended = True

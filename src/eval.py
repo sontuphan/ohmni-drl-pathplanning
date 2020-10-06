@@ -18,7 +18,7 @@ class ExpectedReturn:
         avg_return = total_return / num_episodes
         return avg_return.numpy()[0]
 
-    def eval(self, tfenv, policy, num_episodes=10):
+    def eval(self, tfenv, policy, num_episodes=5):
         avg_return = self.compute_avg_return(tfenv, policy, num_episodes)
         if self.returns is None:
             self.returns = [avg_return]

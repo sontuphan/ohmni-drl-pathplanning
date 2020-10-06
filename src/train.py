@@ -17,7 +17,7 @@ tf.compat.v1.enable_v2_behavior()
 def train():
     # Environment
     tfenv = OhmniInSpace.TfEnv()
-    train_env = tfenv.gen_env()
+    train_env = tfenv.gen_env(gui=True)
     eval_env = tfenv.gen_env()
 
     # Agent
@@ -37,7 +37,6 @@ def train():
     # Train
     agent.train = common.function(agent.train)
     agent.train_step_counter.assign(0)
-    criterion.eval(eval_env, agent.policy)
 
     num_iterations = 10000
     for _ in range(num_iterations):
@@ -46,9 +45,9 @@ def train():
         train_loss = agent.train(experience).loss
         replay_buffer.buffer.clear()
         step = agent.train_step_counter.numpy()
-        if step % 1 == 0:
-            print('step = {0}: loss = {1}'.format(step, train_loss))
         if step % 10 == 0:
+            print('step = {0}: loss = {1}'.format(step, train_loss))
+        if step % 100 == 0:
             avg_return = criterion.eval(eval_env, agent.policy)
             print('step = {0}: Average Return = {1}'.format(step, avg_return))
 
