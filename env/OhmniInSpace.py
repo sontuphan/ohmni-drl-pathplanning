@@ -193,7 +193,6 @@ class PyEnv(py_environment.PyEnvironment):
         mask = np.minimum(seg_img, 1, dtype=np.float32)
         self._state = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
         self._episode_ended, reward = self._compute_reward()
-        print(reward)
         # If exceed the limitation of steps, return rewards
         if self._num_steps > self._max_steps:
             self._episode_ended = True
