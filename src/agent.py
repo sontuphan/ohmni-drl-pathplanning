@@ -18,7 +18,7 @@ class REINFORCE:
             fc_layer_params=(64, 2))
         self.optimizer = tf.compat.v1.train.AdamOptimizer(
             learning_rate=1e-3)
-        self.strategy = strategy_utils.get_strategy(tpu=False, use_gpu=False)
+        self.strategy = strategy_utils.get_strategy(tpu=False, use_gpu=True)
 
     def gen_agent(self, train_step_counter):
         with self.strategy.scope():
