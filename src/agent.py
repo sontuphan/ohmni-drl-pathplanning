@@ -16,8 +16,7 @@ class REINFORCE:
             conv_layer_params=[(32, 5, 1), (64, 5, 2),
                                (128, 5, 2), (256, 5, 2)],
             fc_layer_params=(64, 2))
-        self.optimizer = tf.compat.v1.train.AdamOptimizer(
-            learning_rate=1e-3)
+        self.optimizer = tf.compat.v1.train.AdamOptimizer()
         self.strategy = strategy_utils.get_strategy(tpu=False, use_gpu=True)
 
     def gen_agent(self, train_step_counter):

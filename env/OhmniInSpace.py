@@ -152,7 +152,7 @@ class PyEnv(py_environment.PyEnvironment):
         # Ohmni felt out of the environment
         if position[2] >= 0.5 or position[2] <= -0.5:
             return True
-        # Ohmni felt down
+        # Ohmni is falling down
         if orientation[3] < 0.8:
             return True
         return False

@@ -1,5 +1,6 @@
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.trajectories import trajectory
+import numpy as np
 
 
 class ReplayBuffer:
@@ -25,7 +26,7 @@ class ReplayBuffer:
         self.buffer.add_batch(traj)
         return traj
 
-    def collect_episode(self, env, policy, num_episodes):
+    def collect_episode(self, env, policy, num_episodes=1):
         episode_counter = 0
         env.reset()
         while episode_counter < num_episodes:
