@@ -3,7 +3,7 @@ import tensorflow as tf
 from tf_agents.utils import common
 
 from env import OhmniInSpace
-from src.agent import REINFORCE
+from src.agent import DQN
 from src.buffer import ReplayBuffer
 from src.eval import ExpectedReturn
 
@@ -21,7 +21,7 @@ def train():
     eval_env = tfenv.gen_env()
 
     # Agent
-    algo = REINFORCE(train_env)
+    algo = DQN(train_env)
     train_step_counter = tf.Variable(0)
     agent = algo.gen_agent(train_step_counter)
 
@@ -30,6 +30,7 @@ def train():
         agent.collect_data_spec,
         batch_size=train_env.batch_size,
     )
+    dataset = replay_buffer.get_pipeline()
 
     # Metrics and Evaluation
     criterion = ExpectedReturn()
@@ -40,8 +41,8 @@ def train():
 
     num_iterations = 10000
     for _ in range(num_iterations):
-        replay_buffer.collect_episode(train_env, agent.collect_policy)
-        experience = replay_buffer.buffer.gather_all()
+        replay_buffer.collect_step(train_env, agent.collect_policy)
+        experience, _ = next(dataset)
         train_loss = agent.train(experience)
         replay_buffer.buffer.clear()
         step = agent.train_step_counter.numpy()
@@ -53,13 +54,13 @@ def train():
 
     # Visualization
     criterion.save()
-    REINFORCE.save_policy(agent.policy, saving_dir)
+    DQN.save_policy(agent.policy, saving_dir)
 
 
 def run():
     tfenv = OhmniInSpace.TfEnv()
     env = tfenv.gen_env(gui=True)
-    policy = REINFORCE.load_policy(saving_dir)
+    policy = DQN.load_policy(saving_dir)
     time_step = env.reset()
     while True:
         action_step = policy.action(time_step)

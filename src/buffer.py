@@ -26,7 +26,13 @@ class ReplayBuffer:
         self.buffer.add_batch(traj)
         return traj
 
+    def collect_step(self, env, policy, num_steps=100):
+        """ Usually for DQN """
+        for _ in range(num_steps):
+            self.collect(env, policy)
+
     def collect_episode(self, env, policy, num_episodes=1):
+        """ Usually for REINFORCE """
         episode_counter = 0
         env.reset()
         while episode_counter < num_episodes:

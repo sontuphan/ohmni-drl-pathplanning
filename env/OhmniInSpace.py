@@ -12,6 +12,7 @@ from env.objs import floor, ohmni, obstacle
 
 VELOCITY_COEFFICIENT = 15
 THROTTLE_RANGE = [-1, 1]
+INTERPRETER = [[-0.4, -0.4], [-0.4, 0.4], [0., 0.], [0.4, -0.4], [0.4, 0.4]]
 
 
 class Env:
@@ -80,9 +81,10 @@ class Env:
         """ Reset the environment """
         self._reset()
 
-    def step(self, left_wheel, right_wheel):
+    def step(self, action):
         """ Controllers for left/right wheels which are separate """
         # Normalize velocities
+        [left_wheel, right_wheel] = INTERPRETER[action]
         left_wheel = left_wheel*VELOCITY_COEFFICIENT
         right_wheel = right_wheel*VELOCITY_COEFFICIENT
         # Step
@@ -110,9 +112,9 @@ class PyEnv(py_environment.PyEnvironment):
         self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(2,), dtype=np.float32,
-            minimum=[THROTTLE_RANGE[0], THROTTLE_RANGE[0]],
-            maximum=[THROTTLE_RANGE[1], THROTTLE_RANGE[1]],
+            shape=(), dtype=np.int64,
+            minimum=0,
+            maximum=4,
             name='action'
         )
         self._observation_spec = array_spec.BoundedArraySpec(
@@ -153,7 +155,7 @@ class PyEnv(py_environment.PyEnvironment):
         if position[2] >= 0.5 or position[2] <= -0.5:
             return True
         # Ohmni is falling down
-        if orientation[3] < 0.8:
+        if abs(orientation[0]) > 0.2 or abs(orientation[1]) > 0.2:
             return True
         return False
 
@@ -185,8 +187,7 @@ class PyEnv(py_environment.PyEnvironment):
             return self.reset()
         self._num_steps += 1
         # Step the environment
-        (left_wheel, right_wheel) = action
-        self._env.step(left_wheel, right_wheel)
+        self._env.step(action)
         # Compute and save states
         _, _, rgb_img, _, seg_img = self._env.capture_image()
         self._img = np.array(rgb_img, dtype=np.float32)/255
