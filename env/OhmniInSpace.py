@@ -12,7 +12,7 @@ from env.objs import floor, ohmni, obstacle
 
 VELOCITY_COEFFICIENT = 15
 THROTTLE_RANGE = [-1, 1]
-INTERPRETER = [[-0.4, -0.4], [-0.4, 0.4], [0., 0.], [0.4, -0.4], [0.4, 0.4]]
+INTERPRETER = [[-0.6, -0.6], [-0.3, 0.3], [0., 0.], [0.3, -0.3], [0.6, 0.6]]
 
 
 class Env:
@@ -107,7 +107,7 @@ class PyEnv(py_environment.PyEnvironment):
         self._image_dim = self.image_shape + (3,)
         # Self-defined variables
         self._num_of_obstacles = 5
-        self._destination = np.array([10, 0, 0], dtype=np.float32)
+        self._destination = np.array([8, 0, 0], dtype=np.float32)
         self._max_steps = 500
         self._num_steps = 0
         # PyEnvironment variables

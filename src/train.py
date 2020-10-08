@@ -11,7 +11,7 @@ from src.eval import ExpectedReturn
 saving_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           '../models/policy')
 checkpoint_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               '../models/checkpoints')
+                              '../models/checkpoints')
 # Compulsory config for tf_agents
 tf.compat.v1.enable_v2_behavior()
 
@@ -49,12 +49,12 @@ def train():
         train_loss = agent.train(experience)
         replay_buffer.buffer.clear()
         step = agent.train_step_counter.numpy()
-        # Checkpoints
-        algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
         # Evaluation
         if step % 10 == 0:
             print('step = {0}: loss = {1}'.format(step, train_loss.loss))
         if step % 100 == 0:
+            # Checkpoints
+            algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
             avg_return = criterion.eval(eval_env, agent.policy)
             print('step = {0}: Average Return = {1}'.format(step, avg_return))
 
