@@ -41,7 +41,7 @@ def train():
     agent.train = common.function(agent.train)
     agent.train_step_counter.assign(0)
 
-    num_iterations = 1000000
+    num_iterations = 100000
     algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
     for _ in range(num_iterations):
         replay_buffer.collect_step(train_env, agent.collect_policy)
