@@ -10,6 +10,8 @@ from src.eval import ExpectedReturn
 # Saving dir
 saving_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                           '../models/policy')
+checkpoint_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               '../models/checkpoints')
 # Compulsory config for tf_agents
 tf.compat.v1.enable_v2_behavior()
 
@@ -39,13 +41,17 @@ def train():
     agent.train = common.function(agent.train)
     agent.train_step_counter.assign(0)
 
-    num_iterations = 10000
+    num_iterations = 1000000
+    algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
     for _ in range(num_iterations):
         replay_buffer.collect_step(train_env, agent.collect_policy)
         experience, _ = next(dataset)
         train_loss = agent.train(experience)
         replay_buffer.buffer.clear()
         step = agent.train_step_counter.numpy()
+        # Checkpoints
+        algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
+        # Evaluation
         if step % 10 == 0:
             print('step = {0}: loss = {1}'.format(step, train_loss.loss))
         if step % 100 == 0:
