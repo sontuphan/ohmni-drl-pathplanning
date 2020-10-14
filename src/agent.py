@@ -9,9 +9,12 @@ from tf_agents.experimental.train.utils import strategy_utils
 
 
 class Agent(ABC):
-    def __init__(self, env, gpu=True):
+    def __init__(self, env):
         self.env = env
-        self.strategy = strategy_utils.get_strategy(tpu=False, use_gpu=gpu)
+        self.strategy = strategy_utils.get_strategy(
+            tpu=False,
+            use_gpu=(len(tf.config.list_physical_devices('GPU')) > 0)
+        )
         self.global_step = tf.compat.v1.train.get_or_create_global_step()
         self.checkpointer = None
 
@@ -53,8 +56,8 @@ class Agent(ABC):
 
 
 class REINFORCE(Agent):
-    def __init__(self, env, gpu=True):
-        super().__init__(env, gpu)
+    def __init__(self, env):
+        super().__init__(env)
         self.net = actor_distribution_network.ActorDistributionNetwork(
             self.env.observation_spec(),
             self.env.action_spec(),
@@ -77,8 +80,8 @@ class REINFORCE(Agent):
 
 
 class DQN(Agent):
-    def __init__(self, env, gpu=True):
-        super().__init__(env, gpu)
+    def __init__(self, env):
+        super().__init__(env)
         self.preprocessing_layers = {
             'mask': keras.models.Sequential([
                 keras.layers.Conv2D(filters=32, kernel_size=(5, 5),
