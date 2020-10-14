@@ -8,7 +8,7 @@ from tf_agents.environments import tf_py_environment
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
-from env.objs import floor, ohmni, obstacle
+from env.objs import floor, ohmni, obstacle, destination
 
 VELOCITY_COEFFICIENT = 15
 THROTTLE_RANGE = [-1, 1]
@@ -135,8 +135,9 @@ class PyEnv(py_environment.PyEnvironment):
         self._set_default()
 
     def _randomize_destination(self):
-        destination = np.random.rand(2)*20-10
-        return destination.astype(dtype=np.float32)
+        self._destination = (np.random.rand(2)*20-10).astype(dtype=np.float32)
+        print(self._env.clientId)
+        destination(self._env.clientId, np.append(self._destination, 0.5))
 
     def _get_image_state(self):
         _, _, rgb_img, _, seg_img = self._env.capture_image()
@@ -195,7 +196,7 @@ class PyEnv(py_environment.PyEnvironment):
         """ Set default values to internal states """
         self._num_steps = 0
         self._episode_ended = False
-        self._destination = self._randomize_destination()
+        self._randomize_destination()
         _img, _mask = self._get_image_state()
         _pose = self._get_pose_state()
         self._state = {'mask': _mask,  'pose': _pose}
