@@ -19,7 +19,7 @@ tf.compat.v1.enable_v2_behavior()
 def train():
     # Environment
     tfenv = OhmniInSpace.TfEnv()
-    train_env = tfenv.gen_env(gui=False)
+    train_env = tfenv.gen_env(gui=True)
     eval_env = tfenv.gen_env()
 
     # Agent
