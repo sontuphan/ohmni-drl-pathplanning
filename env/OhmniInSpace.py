@@ -136,7 +136,6 @@ class PyEnv(py_environment.PyEnvironment):
 
     def _randomize_destination(self):
         self._destination = (np.random.rand(2)*20-10).astype(dtype=np.float32)
-        print(self._env.clientId)
         destination(self._env.clientId, np.append(self._destination, 0.5))
 
     def _get_image_state(self):
