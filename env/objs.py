@@ -26,7 +26,7 @@ def obstacle(clientId, pos=None, dynamic=False):
     dynamic_obstacles = ['cube_rotate.urdf']
     obstacles = dynamic_obstacles if dynamic else static_obstacles
     if pos is None:
-        pos = [random.randint(1, 9), random.randint(-2, 2), 0.5]
+        pos = [random.randint(-9, 9), random.randint(-9, 9), 0.5]
     return p.loadURDF(random.choice(obstacles), pos, physicsClientId=clientId)
 
 
