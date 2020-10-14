@@ -15,11 +15,16 @@ checkpoint_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 # Compulsory config for tf_agents
 tf.compat.v1.enable_v2_behavior()
 
+# Trick
+# No GPU: my super-extra-fast-and-furiuos-huhu local machine
+# GPUs: tranning servers
+LOCAL = not len(tf.config.list_physical_devices('GPU')) > 0
+
 
 def train():
     # Environment
     tfenv = OhmniInSpace.TfEnv()
-    train_env = tfenv.gen_env(gui=False)
+    train_env = tfenv.gen_env(gui=LOCAL)
     eval_env = tfenv.gen_env()
 
     # Agent
