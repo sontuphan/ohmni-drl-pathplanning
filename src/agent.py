@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import tensorflow as tf
+from tensorflow import keras
 from tf_agents.agents import dqn, reinforce
 from tf_agents.networks import q_network, actor_distribution_network
 from tf_agents.utils import common
@@ -78,11 +79,27 @@ class REINFORCE(Agent):
 class DQN(Agent):
     def __init__(self, env, gpu=True):
         super().__init__(env, gpu)
+        self.preprocessing_layers = {
+            'mask': keras.models.Sequential([
+                keras.layers.Conv2D(filters=32, kernel_size=(5, 5),
+                                    strides=(1, 1), activation='relu'),
+                keras.layers.Conv2D(filters=64, kernel_size=(5, 5),
+                                    strides=(2, 2), activation='relu'),
+                keras.layers.Conv2D(filters=123, kernel_size=(5, 5),
+                                    strides=(2, 2), activation='relu'),
+                keras.layers.Conv2D(filters=256, kernel_size=(5, 5),
+                                    strides=(2, 2), activation='relu'),
+                keras.layers.Flatten(),
+                keras.layers.Dense(64, activation='relu'),
+            ]),
+            'pose': keras.layers.Dense(64, activation='relu'),
+        }
+        self.preprocessing_combiner = keras.layers.Concatenate(axis=-1)
         self.net = q_network.QNetwork(
-            self.env.observation_spec(),
-            self.env.action_spec(),
-            conv_layer_params=[(32, 5, 1), (64, 5, 2),
-                               (128, 5, 2), (256, 5, 2)],
+            input_tensor_spec=self.env.observation_spec(),
+            action_spec=self.env.action_spec(),
+            preprocessing_layers=self.preprocessing_layers,
+            preprocessing_combiner=self.preprocessing_combiner,
             fc_layer_params=(128, 64)
         )
         self.optimizer = tf.compat.v1.train.AdamOptimizer()

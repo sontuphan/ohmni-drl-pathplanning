@@ -3,7 +3,7 @@ from tf_agents.trajectories import trajectory
 
 
 class ReplayBuffer:
-    def __init__(self, data_spec, batch_size=1, sample_batch_size=64, replay_buffer_capacity=2000):
+    def __init__(self, data_spec, batch_size=1, sample_batch_size=256, replay_buffer_capacity=2000):
         self.data_spec = data_spec
         self.batch_size = batch_size
         self.sample_batch_size = sample_batch_size

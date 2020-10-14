@@ -105,41 +105,59 @@ class PyEnv(py_environment.PyEnvironment):
         # Parameters
         self.image_shape = image_shape
         self._image_dim = self.image_shape + (3,)
-        # Self-defined variables
+        self._pose_dim = (6,)
         self._num_of_obstacles = 5
-        self._destination = np.array([8, 0, 0], dtype=np.float32)
         self._max_steps = 500
-        self._num_steps = 0
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(), dtype=np.int64,
-            minimum=0,
-            maximum=4,
-            name='action'
-        )
-        self._observation_spec = array_spec.BoundedArraySpec(
-            shape=self._image_dim, dtype=np.float32,
-            minimum=np.zeros(self._image_dim, dtype=np.float32),
-            maximum=np.full(self._image_dim, 1, dtype=np.float32),
-            name='observation'
-        )
-        self._state = np.zeros(self._image_dim, dtype=np.float32)
-        self._img = np.zeros(self._image_dim, dtype=np.float32)
-        self._episode_ended = False
+            shape=(), dtype=np.int32,  minimum=0, maximum=4, name='action')
+        self._observation_spec = {
+            'mask': array_spec.BoundedArraySpec(
+                shape=self._image_dim, dtype=np.float32,
+                minimum=0, maximum=1),
+            'pose': array_spec.BoundedArraySpec(
+                shape=self._pose_dim, dtype=np.float32,
+                minimum=-10, maximum=10)
+        }
         self._discount = 0.9
+        # Internal states
+        self._num_steps = 0
+        self._episode_ended = None
+        self._destination = None
+        self._state = None
+        self._img = None
         # Init bullet server
         self._env = Env(
             gui,
             num_of_obstacles=self._num_of_obstacles,
             image_shape=self.image_shape
         )
+        self._set_default()
+
+    def _randomize_destination(self):
+        destination = np.random.rand(2)*20-10
+        return destination.astype(dtype=np.float32)
+
+    def _get_image_state(self):
+        _, _, rgb_img, _, seg_img = self._env.capture_image()
+        img = np.array(rgb_img, dtype=np.float32)/255
+        mask = np.minimum(seg_img, 1, dtype=np.float32)
+        mask = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
+        return img, mask
+
+    def _get_pose_state(self):
+        position, orientation = self._env.getBasePositionAndOrientation()
+        position = np.array(position[0:2], dtype=np.float32)
+        orientation = np.array(orientation, dtype=np.float32)
+        _pose = np.append(position - self._destination, orientation)
+        return _pose
 
     def _normalized_distance_to_destination(self):
         """ Compute the distance from agent to destination """
         position, _ = self._env.getBasePositionAndOrientation()
-        position = np.array(position, dtype=np.float32)
+        position = np.array(position[0:2], dtype=np.float32)
         distance = np.linalg.norm(position-self._destination)
-        origin = np.linalg.norm(np.zeros([3])-self._destination)
+        origin = np.linalg.norm(np.zeros([2])-self._destination)
         return min(distance/origin, 1)
 
     def _is_fatal(self):
@@ -173,12 +191,21 @@ class PyEnv(py_environment.PyEnvironment):
         # Ohmni on his way
         return False, shaped_reward
 
-    def _reset(self):
-        """ Reset """
+    def _set_default(self):
+        """ Set default values to internal states """
         self._num_steps = 0
         self._episode_ended = False
+        self._destination = self._randomize_destination()
+        _img, _mask = self._get_image_state()
+        _pose = self._get_pose_state()
+        self._state = {'mask': _mask,  'pose': _pose}
+        self._img = _img
+
+    def _reset(self):
+        """ Reset environment"""
         self._env.reset()
-        return ts.restart(np.zeros(self._image_dim, dtype=np.float32))
+        self._set_default()
+        return ts.restart(self._state)
 
     def _step(self, action):
         """ Step, action is velocities of left/right wheel """
@@ -189,10 +216,9 @@ class PyEnv(py_environment.PyEnvironment):
         # Step the environment
         self._env.step(action)
         # Compute and save states
-        _, _, rgb_img, _, seg_img = self._env.capture_image()
-        self._img = np.array(rgb_img, dtype=np.float32)/255
-        mask = np.minimum(seg_img, 1, dtype=np.float32)
-        self._state = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
+        _, _mask = self._get_image_state()  # Image state
+        _pose = self._get_pose_state()  # Pose state
+        self._state = {'mask': _mask,  'pose': _pose}
         self._episode_ended, reward = self._compute_reward()
         # If exceed the limitation of steps, return rewards
         if self._num_steps > self._max_steps:
