@@ -83,15 +83,16 @@ class DQN(Agent):
     def __init__(self, env):
         super().__init__(env)
         self.preprocessing_layers = {
-            'mask': keras.models.Sequential([
-                keras.layers.Conv2D(filters=32, kernel_size=(5, 5),
-                                    strides=(1, 1), activation='relu'),
-                keras.layers.Conv2D(filters=64, kernel_size=(5, 5),
-                                    strides=(2, 2), activation='relu'),
-                keras.layers.Conv2D(filters=123, kernel_size=(5, 5),
-                                    strides=(2, 2), activation='relu'),
-                keras.layers.Conv2D(filters=256, kernel_size=(5, 5),
-                                    strides=(2, 2), activation='relu'),
+            'mask': keras.models.Sequential([  # (96, 96, 3)
+                keras.layers.Conv2D(  # (92, 92, 16)
+                    filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+                keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
+                keras.layers.Conv2D(  # (42, 42, 32)
+                    filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+                keras.layers.MaxPooling2D((2, 2)),  # (21, 21, 32)
+                keras.layers.Conv2D(  # (10, 10, 64)
+                    filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
+                keras.layers.MaxPooling2D((2, 2)),  # (5, 5, 64)
                 keras.layers.Flatten(),
                 keras.layers.Dense(64, activation='relu'),
             ]),
