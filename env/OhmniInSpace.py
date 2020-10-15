@@ -1,6 +1,7 @@
 import pybullet as p
 import pybullet_data
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 import cv2 as cv
 
 from tf_agents.environments import py_environment
@@ -8,7 +9,7 @@ from tf_agents.environments import tf_py_environment
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
-from env.objs import floor, ohmni, obstacle, destination
+from env.objs import floor, ohmni, obstacle
 
 VELOCITY_COEFFICIENT = 15
 THROTTLE_RANGE = [-1, 1]
@@ -45,6 +46,16 @@ class Env:
         # Return
         return clientId
 
+    def _randomize_destination(self):
+        destination = (np.random.rand(2)*20-10).astype(dtype=np.float32)
+        p.addUserDebugLine(
+            np.append(destination, 0.),  # From
+            np.append(destination, 3.),  # To
+            [1, 0, 0],  # Red
+            physicsClientId=self.clientId
+        )
+        return destination
+
     def _build(self):
         """ Including floor, ohmni, obstacles into the environment """
         # Add gravity
@@ -62,6 +73,7 @@ class Env:
         """ Remove all objects, then rebuild them """
         p.resetSimulation(physicsClientId=self.clientId)
         self.ohmniId, self._capture_image = self._build()
+        self.destination = self._randomize_destination()
 
     def capture_image(self):
         """ Get image from navigation camera """
@@ -105,7 +117,7 @@ class PyEnv(py_environment.PyEnvironment):
         # Parameters
         self.image_shape = image_shape
         self._image_dim = self.image_shape + (3,)
-        self._pose_dim = (6,)
+        self._pose_dim = (2,)
         self._num_of_obstacles = 20
         self._max_steps = 500
         # PyEnvironment variables
@@ -117,13 +129,12 @@ class PyEnv(py_environment.PyEnvironment):
                 minimum=0, maximum=1),
             'pose': array_spec.BoundedArraySpec(
                 shape=self._pose_dim, dtype=np.float32,
-                minimum=-10, maximum=10)
+                minimum=-20, maximum=20)
         }
         self._discount = 0.9
         # Internal states
         self._num_steps = 0
         self._episode_ended = None
-        self._destination = None
         self._state = None
         self._img = None
         # Init bullet server
@@ -134,10 +145,6 @@ class PyEnv(py_environment.PyEnvironment):
         )
         self._set_default()
 
-    def _randomize_destination(self):
-        self._destination = (np.random.rand(2)*20-10).astype(dtype=np.float32)
-        destination(self._env.clientId, np.append(self._destination, 0.5))
-
     def _get_image_state(self):
         _, _, rgb_img, _, seg_img = self._env.capture_image()
         img = np.array(rgb_img, dtype=np.float32)/255
@@ -147,17 +154,20 @@ class PyEnv(py_environment.PyEnvironment):
 
     def _get_pose_state(self):
         position, orientation = self._env.getBasePositionAndOrientation()
-        position = np.array(position[0:2], dtype=np.float32)
-        orientation = np.array(orientation, dtype=np.float32)
-        _pose = np.append(position - self._destination, orientation)
-        return _pose
+        position = np.array(position, dtype=np.float32)
+        destination_posistion = np.append(self._env.destination, 0.)
+        rotation = R.from_quat(
+            [-orientation[0], -orientation[1], -orientation[2], orientation[3]])
+        rel_position = rotation.apply(destination_posistion - position)
+        _pose = rel_position[0:2]
+        return _pose.astype(dtype=np.float32)
 
     def _normalized_distance_to_destination(self):
         """ Compute the distance from agent to destination """
         position, _ = self._env.getBasePositionAndOrientation()
         position = np.array(position[0:2], dtype=np.float32)
-        distance = np.linalg.norm(position-self._destination)
-        origin = np.linalg.norm(np.zeros([2])-self._destination)
+        distance = np.linalg.norm(position-self._env.destination)
+        origin = np.linalg.norm(np.zeros([2])-self._env.destination)
         return min(distance/origin, 1)
 
     def _is_fatal(self):
@@ -195,7 +205,6 @@ class PyEnv(py_environment.PyEnvironment):
         """ Set default values to internal states """
         self._num_steps = 0
         self._episode_ended = False
-        self._randomize_destination()
         _img, _mask = self._get_image_state()
         _pose = self._get_pose_state()
         self._state = {'mask': _mask,  'pose': _pose}

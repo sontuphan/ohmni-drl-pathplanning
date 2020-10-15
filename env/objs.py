@@ -19,12 +19,6 @@ def floor(clientId, texture=False, wall=False):
     return floorId
 
 
-def destination(clientId, pos):
-    if pos is None:
-        pos = [random.randint(-9, 9), random.randint(-9, 9), 0.5]
-    return p.loadURDF('racecar/racecar.urdf', pos, physicsClientId=clientId)
-
-
 def obstacle(clientId, pos=None, dynamic=False):
     static_obstacles = ['env/model/table/table.urdf',
                         'cube_no_rotation.urdf',

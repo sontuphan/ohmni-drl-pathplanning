@@ -96,7 +96,7 @@ class DQN(Agent):
                 keras.layers.Flatten(),
                 keras.layers.Dense(64, activation='relu'),
             ]),
-            'pose': keras.layers.Dense(64, activation='relu'),
+            'pose': keras.layers.Dense(16, activation='relu'),
         }
         self.preprocessing_combiner = keras.layers.Concatenate(axis=-1)
         self.net = q_network.QNetwork(
@@ -104,7 +104,7 @@ class DQN(Agent):
             action_spec=self.env.action_spec(),
             preprocessing_layers=self.preprocessing_layers,
             preprocessing_combiner=self.preprocessing_combiner,
-            fc_layer_params=(128, 64)
+            fc_layer_params=(64, 32)
         )
         self.optimizer = tf.compat.v1.train.AdamOptimizer()
 

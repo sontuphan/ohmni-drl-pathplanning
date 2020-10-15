@@ -16,7 +16,7 @@ checkpoint_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 tf.compat.v1.enable_v2_behavior()
 
 # Trick
-# No GPU: my super-extra-fast-and-furiuos-huhu local machine
+# No GPU: my super-extra-fast-and-furiuos-huhu machine
 # GPUs: tranning servers
 LOCAL = not len(tf.config.list_physical_devices('GPU')) > 0
 
