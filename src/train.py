@@ -1,4 +1,5 @@
 import os
+import time
 import tensorflow as tf
 from tf_agents.utils import common
 
@@ -19,6 +20,30 @@ tf.compat.v1.enable_v2_behavior()
 # No GPU: my super-extra-fast-and-furiuos-huhu machine
 # GPUs: tranning servers
 LOCAL = not len(tf.config.list_physical_devices('GPU')) > 0
+
+
+def check_point():
+    # Environment
+    tfenv = OhmniInSpace.TfEnv()
+    train_env = tfenv.gen_env(gui=LOCAL)
+
+    # Agent
+    algo = DQN(train_env)
+    train_step_counter = tf.Variable(0)
+    agent = algo.gen_agent(train_step_counter)
+
+    # Replay buffer
+    replay_buffer = ReplayBuffer(
+        agent.collect_data_spec,
+        batch_size=train_env.batch_size,
+    )
+
+    # Train
+    agent.train_step_counter.assign(0)
+    num_iterations = 100000
+    algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
+    for _ in range(num_iterations):
+        replay_buffer.collect_step(train_env, agent.collect_policy)
 
 
 def train():
@@ -48,6 +73,7 @@ def train():
 
     num_iterations = 100000
     algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
+    start = time.time()
     for _ in range(num_iterations):
         replay_buffer.collect_step(train_env, agent.collect_policy)
         experience, _ = next(dataset)
@@ -56,6 +82,8 @@ def train():
         # Evaluation
         if step % 10 == 0:
             print('step = {0}: loss = {1}'.format(step, train_loss.loss))
+            print('Step estimated time: {:.4f}'.format((time.time()-start)/10))
+            start = time.time()
         if step % 100 == 0:
             # Checkpoints
             algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)

@@ -29,7 +29,7 @@ class ReplayBuffer:
     def collect_step(self, env, policy):
         """ Usually for DQN """
         # Init buffer
-        while (len(self) < self.sample_batch_size):
+        while (len(self) < self.sample_batch_size*2):
             self.collect(env, policy)
         # Step
         for _ in range(self.steps_per_iteration):

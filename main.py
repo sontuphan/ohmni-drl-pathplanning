@@ -31,6 +31,8 @@ if sys.argv[1] == '--test':
 elif sys.argv[1] == '--ohmni':
     if sys.argv[2] == 'train':
         train.train()
+    if sys.argv[2] == 'check_point':
+        train.check_point()
     if sys.argv[2] == 'run':
         train.run()
 
