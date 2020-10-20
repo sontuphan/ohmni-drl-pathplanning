@@ -39,6 +39,7 @@ class ReplayBuffer:
         """ Usually for REINFORCE """
         episode_counter = 0
         env.reset()
+        self.buffer.clear()
         while episode_counter < num_episodes:
             traj = self.collect(env, policy)
             if traj.is_boundary():
