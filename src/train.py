@@ -1,5 +1,4 @@
 import os
-import time
 import tensorflow as tf
 from tf_agents.utils import common
 
@@ -25,7 +24,7 @@ LOCAL = not len(tf.config.list_physical_devices('GPU')) > 0
 def train():
     # Environment
     tfenv = OhmniInSpace.TfEnv()
-    train_env = tfenv.gen_env(gui=LOCAL and False)
+    train_env = tfenv.gen_env(gui=LOCAL)
     eval_env = tfenv.gen_env()
 
     # Agent
