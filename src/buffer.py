@@ -3,11 +3,12 @@ from tf_agents.trajectories import trajectory
 
 
 class ReplayBuffer:
-    def __init__(self, data_spec, batch_size=1, sample_batch_size=256, replay_buffer_capacity=2000):
+    def __init__(self, data_spec, batch_size=1, sample_batch_size=256):
         self.data_spec = data_spec
         self.batch_size = batch_size
         self.sample_batch_size = sample_batch_size
-        self.replay_buffer_capacity = replay_buffer_capacity
+        self.replay_buffer_capacity = int(sample_batch_size * 8)
+        self.steps_per_iteration = int(sample_batch_size / 64)
         self.buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
             data_spec=self.data_spec,
             batch_size=self.batch_size,
@@ -25,9 +26,13 @@ class ReplayBuffer:
         self.buffer.add_batch(traj)
         return traj
 
-    def collect_step(self, env, policy, num_steps=100):
+    def collect_step(self, env, policy):
         """ Usually for DQN """
-        for _ in range(num_steps):
+        # Init buffer
+        while (len(self) < self.sample_batch_size):
+            self.collect(env, policy)
+        # Step
+        for _ in range(self.steps_per_iteration):
             self.collect(env, policy)
 
     def collect_episode(self, env, policy, num_episodes=1):

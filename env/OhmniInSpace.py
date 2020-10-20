@@ -42,7 +42,7 @@ class Env:
         p.setAdditionalSearchPath(
             pybullet_data.getDataPath(), physicsClientId=clientId)
         p.setTimeStep(self.timestep, physicsClientId=clientId)
-
+        p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
         # Return
         return clientId
 
@@ -229,6 +229,7 @@ class PyEnv(py_environment.PyEnvironment):
         _pose = self._get_pose_state()  # Pose state
         self._state = {'mask': _mask,  'pose': _pose}
         self._episode_ended, reward = self._compute_reward()
+        # print('Pose: {} / Reward: {}'.format(_pose, reward))
         # If exceed the limitation of steps, return rewards
         if self._num_steps > self._max_steps:
             self._episode_ended = True
