@@ -50,13 +50,10 @@ def train():
     num_iterations = 100000
     algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
     for _ in range(num_iterations):
-        start = time.time()
         replay_buffer.collect_step(train_env, agent.collect_policy)
         experience, _ = next(dataset)
         train_loss = agent.train(experience)
         step = agent.train_step_counter.numpy()
-        end = time.time()
-        print('Step estimated time: {:.4f}'.format(end-start))
         # Evaluation
         if step % 10 == 0:
             print('step = {0}: loss = {1}'.format(step, train_loss.loss))
