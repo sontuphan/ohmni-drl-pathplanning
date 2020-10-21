@@ -71,7 +71,7 @@ def train():
     agent.train = common.function(agent.train)
     agent.train_step_counter.assign(0)
 
-    num_iterations = 100000
+    num_iterations = 2
     algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
     start = time.time()
     for _ in range(num_iterations):
@@ -80,12 +80,12 @@ def train():
         train_loss = agent.train(experience)
         step = agent.train_step_counter.numpy()
         # Evaluation
-        if step % 100 == 0:
+        if step % 1 == 0:
             print('step = {0}: loss = {1}'.format(step, train_loss.loss))
             end = time.time()
             print('Step estimated time: {:.4f}'.format((end-start)/100))
             start = time.time()
-        if step % 1000 == 0:
+        if step % 1 == 0:
             # Checkpoints
             algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
             avg_return = criterion.eval(eval_env, agent.policy)
