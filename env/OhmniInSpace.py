@@ -194,12 +194,12 @@ class PyEnv(py_environment.PyEnvironment):
         shaped_reward = 1 - normalized_distance
         # Ohmni reach the destination
         if normalized_distance < 0.1:
-            return True, shaped_reward - self._num_steps/self._max_steps
+            return True, 1
         # Stop if detecting collisions or a fall
         if self._is_fatal():
             return True, -1
         # Ohmni on his way
-        return False, shaped_reward
+        return False, -1/self._max_steps
 
     def _set_default(self):
         """ Set default values to internal states """
