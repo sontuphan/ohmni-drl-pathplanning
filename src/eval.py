@@ -29,4 +29,4 @@ class ExpectedReturn:
     def save(self):
         plt.plot(self.returns)
         plt.ylabel('Average Return')
-        plt.savefig('eval.jpg')
+        plt.savefig('models/eval.jpg')
