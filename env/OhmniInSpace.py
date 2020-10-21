@@ -199,7 +199,7 @@ class PyEnv(py_environment.PyEnvironment):
         if self._is_fatal():
             return True, -1
         # Ohmni on his way
-        return False, -1/self._max_steps
+        return False, shaped_reward-1/self._max_steps
 
     def _set_default(self):
         """ Set default values to internal states """
