@@ -80,16 +80,14 @@ def train():
         train_loss = agent.train(experience)
         step = agent.train_step_counter.numpy()
         # Evaluation
-        if step % 1 == 0:
-            print('step = {0}: loss = {1}'.format(step, train_loss.loss))
-            end = time.time()
-            print('Step estimated time: {:.4f}'.format((end-start)/100))
-            start = time.time()
-        if step % 1 == 0:
+        if step % 1000 == 0:
             # Checkpoints
             algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
             avg_return = criterion.eval(eval_env, agent.policy)
-            print('step = {0}: Average Return = {1}'.format(step, avg_return))
+            print('Step = {0}: Average Return = {1}'.format(step, avg_return))
+            end = time.time()
+            print('Step estimated time: {:.4f}'.format((end-start)/1000))
+            start = time.time()
 
     # Visualization
     criterion.save()
