@@ -8,7 +8,6 @@ class ReplayBuffer:
         self.batch_size = batch_size
         self.sample_batch_size = sample_batch_size
         self.replay_buffer_capacity = int(sample_batch_size * 8)
-        self.steps_per_iteration = int(sample_batch_size / 64)
         self.buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
             data_spec=self.data_spec,
             batch_size=self.batch_size,
@@ -29,11 +28,10 @@ class ReplayBuffer:
     def collect_step(self, env, policy):
         """ Usually for DQN """
         # Init buffer
-        while (len(self) < self.sample_batch_size*2):
+        while (len(self) < self.replay_buffer_capacity):
             self.collect(env, policy)
         # Step
-        for _ in range(self.steps_per_iteration):
-            self.collect(env, policy)
+        self.collect(env, policy)
 
     def collect_episode(self, env, policy, num_episodes=1):
         """ Usually for REINFORCE """
