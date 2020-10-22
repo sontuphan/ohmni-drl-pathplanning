@@ -131,7 +131,7 @@ class PyEnv(py_environment.PyEnvironment):
                 shape=self._pose_dim, dtype=np.float32,
                 minimum=-20, maximum=20)
         }
-        self._discount = 0.9
+        self._discount = 1.0
         # Internal states
         self._num_steps = 0
         self._episode_ended = None
