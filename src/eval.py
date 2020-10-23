@@ -13,7 +13,7 @@ class ExpectedReturn:
             while not time_step.is_last():
                 action_step = policy.action(time_step)
                 time_step = tfenv.step(action_step.action)
-                episode_return = time_step.reward + episode_return
+                episode_return += time_step.reward
             total_return += episode_return
         avg_return = total_return / num_episodes
         return avg_return.numpy()[0]

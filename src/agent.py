@@ -15,6 +15,7 @@ class Agent(ABC):
             tpu=False,
             use_gpu=(len(tf.config.list_physical_devices('GPU')) > 0)
         )
+        self.discount = 0.99
         self.global_step = tf.compat.v1.train.get_or_create_global_step()
         self.checkpointer = None
 
@@ -115,7 +116,9 @@ class DQN(Agent):
                 self.env.action_spec(),
                 q_network=self.net,
                 optimizer=self.optimizer,
+                gamma=self.discount,
                 td_errors_loss_fn=common.element_wise_squared_loss,
-                train_step_counter=train_step_counter)
+                train_step_counter=train_step_counter
+            )
             agent.initialize()
             return agent
