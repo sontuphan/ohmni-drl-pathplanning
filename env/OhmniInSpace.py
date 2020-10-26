@@ -131,7 +131,6 @@ class PyEnv(py_environment.PyEnvironment):
                 shape=self._pose_dim, dtype=np.float32,
                 minimum=-20, maximum=20)
         }
-        self._discount = 0.9
         # Internal states
         self._num_steps = 0
         self._episode_ended = None
@@ -239,7 +238,7 @@ class PyEnv(py_environment.PyEnvironment):
         if self._episode_ended:
             return ts.termination(self._state, reward)
         else:
-            return ts.transition(self._state, reward, discount=self._discount)
+            return ts.transition(self._state, reward)
 
     def action_spec(self):
         """ Return action specs """
