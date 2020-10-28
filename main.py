@@ -10,6 +10,7 @@ if sys.argv[1] == '--test':
         ois = OhmniInSpace.PyEnv(gui=True)
         timestep = ois.reset()
         counter = 0
+        (_, _, channels) = ois.image_stack
         while True:
             if timestep.is_last():
                 counter = 0
@@ -18,8 +19,9 @@ if sys.argv[1] == '--test':
             (_, reward, discount, observation) = timestep
             print('Step {} / Reward {}'.format(counter, reward))
             ois.render()
-            for index, frame in enumerate(observation):
-                cv.imshow('Segmentation {}'.format(index), frame)
+            for index in range(channels):
+                cv.imshow('Segmentation {}'.format(
+                    index), observation[:, :, index])
             if cv.waitKey(10) & 0xFF == ord('q'):
                 break
     if sys.argv[2] == 'tf-env':

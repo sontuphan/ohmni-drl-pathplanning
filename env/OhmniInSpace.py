@@ -2,7 +2,6 @@ import pybullet as p
 import pybullet_data
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from collections import deque
 import cv2 as cv
 
 from tf_agents.environments import py_environment
@@ -117,14 +116,14 @@ class PyEnv(py_environment.PyEnvironment):
         super(PyEnv, self).__init__()
         # Parameters
         self.image_shape = image_shape
-        self._image_stack = self.image_shape + (4,)
+        self.image_stack = self.image_shape + (4,)
         self._num_of_obstacles = 20
         self._max_steps = 500
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32,  minimum=0, maximum=4, name='action')
         self._observation_spec = array_spec.BoundedArraySpec(
-            shape=self._image_stack, dtype=np.float32,
+            shape=self.image_stack, dtype=np.float32,
             minimum=0, maximum=1, name='observation')
         # Init bullet server
         self._env = Env(
@@ -207,9 +206,7 @@ class PyEnv(py_environment.PyEnvironment):
 
     def _compute_state(self):
         if self._state is None:
-            (h, w, c) = self._image_stack
-            self._state = deque([np.zeros((h, w), dtype=np.float32)
-                                 for i in range(c)], maxlen=c)
+            self._state = np.zeros(self.image_stack, dtype=np.float32)
         _img, _mask = self._get_image_state()  # Image state
         _pose = self._get_pose_state()  # Pose state
         # Gamifying
@@ -220,8 +217,11 @@ class PyEnv(py_environment.PyEnvironment):
                         (int(cent[1]), int(cent[0])),
                         (int(dest[1]), int(dest[0])),
                         (0, 1, 0), thickness=2)
+        _mask = cv.cvtColor(_mask, cv.COLOR_RGB2GRAY)
+        _mask = _mask[..., np.newaxis]
         self._img = _img
-        self._state.append(cv.cvtColor(_mask, cv.COLOR_RGB2GRAY))
+        self._state = self._state[:, :, 1:]
+        self._state = np.append(self._state, _mask, axis=2)
 
     def _step(self, action):
         """ Step, action is velocities of left/right wheel """
