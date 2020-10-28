@@ -18,7 +18,8 @@ if sys.argv[1] == '--test':
             (_, reward, discount, observation) = timestep
             print('Step {} / Reward {}'.format(counter, reward))
             ois.render()
-            cv.imshow('Segmentation', cv.cvtColor(observation, cv.COLOR_RGB2GRAY))
+            for index, frame in enumerate(observation):
+                cv.imshow('Segmentation {}'.format(index), frame)
             if cv.waitKey(10) & 0xFF == ord('q'):
                 break
     if sys.argv[2] == 'tf-env':

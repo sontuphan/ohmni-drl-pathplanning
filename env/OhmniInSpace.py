@@ -2,6 +2,7 @@ import pybullet as p
 import pybullet_data
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from collections import deque
 import cv2 as cv
 
 from tf_agents.environments import py_environment
@@ -116,8 +117,7 @@ class PyEnv(py_environment.PyEnvironment):
         super(PyEnv, self).__init__()
         # Parameters
         self.image_shape = image_shape
-        self._image_stack = self.image_shape + (3,)
-        self._pose_dim = (2,)
+        self._image_stack = self.image_shape + (4,)
         self._num_of_obstacles = 20
         self._max_steps = 500
         # PyEnvironment variables
@@ -135,7 +135,9 @@ class PyEnv(py_environment.PyEnvironment):
         # Internal states
         self._num_steps = 0
         self._episode_ended = False
-        self._img, self._state = self._compute_state()
+        self._img = None
+        self._state = None
+        self._compute_state()
 
     def _get_image_state(self):
         _, _, rgb_img, _, seg_img = self._env.capture_image()
@@ -198,10 +200,16 @@ class PyEnv(py_environment.PyEnvironment):
         self._env.reset()
         self._num_steps = 0
         self._episode_ended = False
-        self._img, self._state = self._compute_state()
+        self._img = None
+        self._state = None
+        self._compute_state()
         return ts.restart(self._state)
 
     def _compute_state(self):
+        if self._state is None:
+            (h, w, c) = self._image_stack
+            self._state = deque([np.zeros((h, w), dtype=np.float32)
+                                 for i in range(c)], maxlen=c)
         _img, _mask = self._get_image_state()  # Image state
         _pose = self._get_pose_state()  # Pose state
         # Gamifying
@@ -212,7 +220,8 @@ class PyEnv(py_environment.PyEnvironment):
                         (int(cent[1]), int(cent[0])),
                         (int(dest[1]), int(dest[0])),
                         (0, 1, 0), thickness=2)
-        return _img, _mask
+        self._img = _img
+        self._state.append(cv.cvtColor(_mask, cv.COLOR_RGB2GRAY))
 
     def _step(self, action):
         """ Step, action is velocities of left/right wheel """
@@ -223,7 +232,7 @@ class PyEnv(py_environment.PyEnvironment):
         # Step the environment
         self._env.step(action)
         # Compute and save states
-        self._img, self._state = self._compute_state()
+        self._compute_state()
         self._episode_ended, reward = self._compute_reward()
         if self._env.gui:
             print('Reward: {}'.format(reward))

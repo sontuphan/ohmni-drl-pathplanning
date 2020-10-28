@@ -83,7 +83,7 @@ class REINFORCE(Agent):
 class DQN(Agent):
     def __init__(self, env):
         super().__init__(env)
-        self.preprocessing_layers = keras.models.Sequential([  # (96, 96, 3)
+        self.preprocessing_layers = keras.models.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
                 filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
             keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
