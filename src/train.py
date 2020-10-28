@@ -72,7 +72,7 @@ def train():
     agent.train = common.function(agent.train)
     agent.train_step_counter.assign(0)
 
-    num_iterations = 50000
+    num_iterations = 500000
     eval_step = 1000
     algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
     start = time.time()
