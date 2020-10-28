@@ -83,28 +83,23 @@ class REINFORCE(Agent):
 class DQN(Agent):
     def __init__(self, env):
         super().__init__(env)
-        self.preprocessing_layers = {
-            'mask': keras.models.Sequential([  # (96, 96, 3)
-                keras.layers.Conv2D(  # (92, 92, 16)
-                    filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
-                keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
-                keras.layers.Conv2D(  # (42, 42, 32)
-                    filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
-                keras.layers.MaxPooling2D((2, 2)),  # (21, 21, 32)
-                keras.layers.Conv2D(  # (10, 10, 64)
-                    filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
-                keras.layers.MaxPooling2D((2, 2)),  # (5, 5, 64)
-                keras.layers.Flatten(),
-                keras.layers.Dense(64, activation='relu'),
-            ]),
-            'pose': keras.layers.Dense(16, activation='relu'),
-        }
-        self.preprocessing_combiner = keras.layers.Concatenate(axis=-1)
+        self.preprocessing_layers = keras.models.Sequential([  # (96, 96, 3)
+            keras.layers.Conv2D(  # (92, 92, 16)
+                filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
+            keras.layers.Conv2D(  # (42, 42, 32)
+                filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2)),  # (21, 21, 32)
+            keras.layers.Conv2D(  # (10, 10, 64)
+                filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2)),  # (5, 5, 64)
+            keras.layers.Flatten(),
+            keras.layers.Dense(64, activation='relu'),
+        ])
         self.net = q_network.QNetwork(
             input_tensor_spec=self.env.observation_spec(),
             action_spec=self.env.action_spec(),
             preprocessing_layers=self.preprocessing_layers,
-            preprocessing_combiner=self.preprocessing_combiner,
             fc_layer_params=(64, 32)
         )
         self.optimizer = tf.compat.v1.train.AdamOptimizer()

@@ -116,33 +116,26 @@ class PyEnv(py_environment.PyEnvironment):
         super(PyEnv, self).__init__()
         # Parameters
         self.image_shape = image_shape
-        self._image_dim = self.image_shape + (3,)
+        self._image_stack = self.image_shape + (4,)
         self._pose_dim = (2,)
         self._num_of_obstacles = 20
         self._max_steps = 500
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32,  minimum=0, maximum=4, name='action')
-        self._observation_spec = {
-            'mask': array_spec.BoundedArraySpec(
-                shape=self._image_dim, dtype=np.float32,
-                minimum=0, maximum=1),
-            'pose': array_spec.BoundedArraySpec(
-                shape=self._pose_dim, dtype=np.float32,
-                minimum=-20, maximum=20)
-        }
-        # Internal states
-        self._num_steps = 0
-        self._episode_ended = None
-        self._state = None
-        self._img = None
+        self._observation_spec = array_spec.BoundedArraySpec(
+            shape=self._image_stack, dtype=np.float32,
+            minimum=0, maximum=1, name='observation')
         # Init bullet server
         self._env = Env(
             gui,
             num_of_obstacles=self._num_of_obstacles,
             image_shape=self.image_shape
         )
-        self._set_default()
+        # Internal states
+        self._num_steps = 0
+        self._episode_ended = False
+        self._img, self._state = self._compute_state()
 
     def _get_image_state(self):
         _, _, rgb_img, _, seg_img = self._env.capture_image()
@@ -200,20 +193,26 @@ class PyEnv(py_environment.PyEnvironment):
         # Ohmni on his way
         return False, shaped_reward-1/self._max_steps
 
-    def _set_default(self):
-        """ Set default values to internal states """
-        self._num_steps = 0
-        self._episode_ended = False
-        _img, _mask = self._get_image_state()
-        _pose = self._get_pose_state()
-        self._state = {'mask': _mask,  'pose': _pose}
-        self._img = _img
-
     def _reset(self):
         """ Reset environment"""
         self._env.reset()
-        self._set_default()
+        self._num_steps = 0
+        self._episode_ended = False
+        self._img, self._state = self._compute_state()
         return ts.restart(self._state)
+
+    def _compute_state(self):
+        _img, _mask = self._get_image_state()  # Image state
+        _pose = self._get_pose_state()  # Pose state
+        # Gamifying
+        (h, w) = self.image_shape
+        cent = np.array([w/2, h/2], dtype=np.float32)
+        dest = -_pose*1000 + cent  # Transpose/Scale/Tranform
+        _mask = cv.line(_mask,
+                        (int(cent[1]), int(cent[0])),
+                        (int(dest[1]), int(dest[0])),
+                        (0, 1, 0), thickness=2)
+        return _img, _mask
 
     def _step(self, action):
         """ Step, action is velocities of left/right wheel """
@@ -224,12 +223,10 @@ class PyEnv(py_environment.PyEnvironment):
         # Step the environment
         self._env.step(action)
         # Compute and save states
-        _, _mask = self._get_image_state()  # Image state
-        _pose = self._get_pose_state()  # Pose state
-        self._state = {'mask': _mask,  'pose': _pose}
+        self._img, self._state = self._compute_state()
         self._episode_ended, reward = self._compute_reward()
         if self._env.gui:
-            print('Pose: {} / Reward: {}'.format(_pose, reward))
+            print('Reward: {}'.format(reward))
         # If exceed the limitation of steps, return rewards
         if self._num_steps > self._max_steps:
             self._episode_ended = True

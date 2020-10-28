@@ -56,6 +56,7 @@ def train():
     algo = DQN(train_env)
     train_step_counter = tf.Variable(0)
     agent = algo.gen_agent(train_step_counter)
+    algo.net.summary()
 
     # Replay buffer
     replay_buffer = ReplayBuffer(
