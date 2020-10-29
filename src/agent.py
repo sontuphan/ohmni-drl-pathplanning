@@ -99,7 +99,8 @@ class DQN(Agent):
         self.net = q_network.QNetwork(
             input_tensor_spec=self.env.observation_spec(),
             action_spec=self.env.action_spec(),
-            preprocessing_layers=self.preprocessing_layers,
+            # preprocessing_layers=self.preprocessing_layers,
+            conv_layer_params=[(64, 8, 2), (128, 5, 2), (256, 3, 2)],
             fc_layer_params=(64, 32)
         )
         self.optimizer = tf.compat.v1.train.AdamOptimizer()
