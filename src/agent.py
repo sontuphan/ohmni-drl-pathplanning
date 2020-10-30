@@ -17,25 +17,23 @@ class DQN():
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
         # Model
-        strategy = tf.distribute.MirroredStrategy()
-        with strategy.scope():
-            self.model = keras.models.Sequential([  # (96, 96, *)
-                keras.layers.Conv2D(  # (92, 92, 16)
-                    filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu',
-                    input_shape=(96, 96, 4)),
-                keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
-                keras.layers.Conv2D(  # (42, 42, 32)
-                    filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
-                keras.layers.MaxPooling2D((2, 2)),  # (21, 21, 32)
-                keras.layers.Conv2D(  # (10, 10, 64)
-                    filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
-                keras.layers.MaxPooling2D((2, 2)),  # (5, 5, 64)
-                keras.layers.Flatten(),
-                keras.layers.Dense(64, activation='relu'),
-                keras.layers.Dense(32, activation='relu'),
-                keras.layers.Dense(5),
-            ])
-            self.optimizer = keras.optimizers.Adam()
+        self.model = keras.models.Sequential([  # (96, 96, *)
+            keras.layers.Conv2D(  # (92, 92, 16)
+                filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu',
+                input_shape=(96, 96, 4)),
+            keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
+            keras.layers.Conv2D(  # (42, 42, 32)
+                filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2)),  # (21, 21, 32)
+            keras.layers.Conv2D(  # (10, 10, 64)
+                filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2)),  # (5, 5, 64)
+            keras.layers.Flatten(),
+            keras.layers.Dense(64, activation='relu'),
+            keras.layers.Dense(32, activation='relu'),
+            keras.layers.Dense(5),
+        ])
+        self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
         # self.checkpoint_dir = CHECKPOINT_DIR
         # self.checkpoint_prefix = os.path.join(self.checkpoint_dir, 'ckpt')
