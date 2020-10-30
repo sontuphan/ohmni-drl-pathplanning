@@ -35,13 +35,13 @@ class DQN():
                 keras.layers.Dense(5),
             ])
             self.optimizer = keras.optimizers.Adam()
-        # Setup checkpoints
-        self.checkpoint_dir = CHECKPOINT_DIR
-        self.checkpoint_prefix = os.path.join(self.checkpoint_dir, 'ckpt')
-        self.checkpoint = tf.train.Checkpoint(optimizer=self.optimizer,
-                                              net=self.model)
-        self.checkpoint.restore(
-            tf.train.latest_checkpoint(self.checkpoint_dir))
+            # Setup checkpoints
+            self.checkpoint_dir = CHECKPOINT_DIR
+            self.checkpoint_prefix = os.path.join(self.checkpoint_dir, 'ckpt')
+            self.checkpoint = tf.train.Checkpoint(optimizer=self.optimizer,
+                                                net=self.model)
+            self.checkpoint.restore(
+                tf.train.latest_checkpoint(self.checkpoint_dir))
 
     def _define_collect_data_spec(self, env):
         return trajectory.from_transition(
