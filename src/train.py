@@ -47,45 +47,46 @@ def check_point():
 def train():
     # Environment
     tfenv = OhmniInSpace.TfEnv()
-    train_env = tfenv.gen_env(gui=LOCAL)
+    # train_env = tfenv.gen_env(gui=LOCAL)
+    train_env = tfenv.gen_env()
     eval_env = tfenv.gen_env()
 
     # Agent
-    train_step_counter = tf.Variable(0)
-    agent = DQN(train_env, train_step_counter)
+    agent = DQN(train_env)
 
-    # # Replay buffer
-    # replay_buffer = ReplayBuffer(
-    #     agent.collect_data_spec,
-    #     batch_size=train_env.batch_size,
-    # )
-    # dataset = replay_buffer.get_pipeline()
+    # Replay buffer
+    replay_buffer = ReplayBuffer(
+        agent.collect_data_spec,
+        batch_size=train_env.batch_size,
+        sample_batch_size=8,
+    )
+    replay_buffer.collect_step(train_env, agent)
+    dataset = replay_buffer.pipeline()
 
-    # # Metrics and Evaluation
-    # criterion = ExpectedReturn()
+    # Metrics and Evaluation
+    criterion = ExpectedReturn()
 
-    # # Train
-    # agent.train = common.function(agent.train)
-    # agent.train_step_counter.assign(0)
-
-    # num_iterations = 500000
-    # eval_step = 1000
-    # algo.load_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
-    # start = time.time()
-    # for _ in range(num_iterations):
-    #     replay_buffer.collect_step(train_env, agent.collect_policy)
-    #     experience, _ = next(dataset)
-    #     train_loss = agent.train(experience)
-    #     step = agent.train_step_counter.numpy()
-    #     # Evaluation
-    #     if step % eval_step == 0:
-    #         # Checkpoints
-    #         algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
-    #         avg_return = criterion.eval(eval_env, agent.policy)
-    #         print('Step = {0}: Average Return = {1}'.format(step, avg_return))
-    #         end = time.time()
-    #         print('Step estimated time: {:.4f}'.format((end-start)/eval_step))
-    #         start = time.time()
+    # Train
+    num_iterations = 500000
+    eval_step = 1000
+    start = time.time()
+    step = 0
+    for _ in range(num_iterations):
+        step += 1
+        replay_buffer.collect_step(train_env, agent)
+        experience, _ = next(dataset)
+        train_loss = agent.train(experience)
+        exit(1)
+        step = agent.train_step_counter.numpy()
+        # Evaluation
+        if step % eval_step == 0:
+            # Checkpoints
+            algo.save_checkpoint(checkpoint_dir, agent, replay_buffer.buffer)
+            avg_return = criterion.eval(eval_env, agent.policy)
+            print('Step = {0}: Average Return = {1}'.format(step, avg_return))
+            end = time.time()
+            print('Step estimated time: {:.4f}'.format((end-start)/eval_step))
+            start = time.time()
 
     # # Visualization
     # criterion.save()

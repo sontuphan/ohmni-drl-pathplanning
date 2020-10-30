@@ -28,7 +28,7 @@ class ReplayBuffer:
     def collect_step(self, env, policy):
         """ Usually for DQN """
         # Init buffer
-        while (len(self) < int(self.sample_batch_size * 2)):
+        while len(self) < int(self.sample_batch_size * 2):
             self.collect(env, policy)
         # Step
         self.collect(env, policy)
@@ -43,7 +43,7 @@ class ReplayBuffer:
             if traj.is_boundary():
                 episode_counter += 1
 
-    def get_pipeline(self, num_parallel_calls=3, num_steps=2, num_prefetch=3):
+    def pipeline(self, num_parallel_calls=3, num_steps=2, num_prefetch=3):
         dataset = self.buffer.as_dataset(
             num_parallel_calls=num_parallel_calls,
             sample_batch_size=self.sample_batch_size,
