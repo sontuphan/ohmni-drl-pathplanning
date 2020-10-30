@@ -17,7 +17,8 @@ class DQN():
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
         # Model
-        with tf.distribute.MirroredStrategy().scope():
+        strategy = tf.distribute.MirroredStrategy()
+        with strategy.scope():
             self.model = keras.models.Sequential([  # (96, 96, *)
                 keras.layers.Conv2D(  # (92, 92, 16)
                     filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu',
@@ -34,7 +35,7 @@ class DQN():
                 keras.layers.Dense(32, activation='relu'),
                 keras.layers.Dense(5),
             ])
-            self.optimizer = keras.optimizers.Adam()
+        self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
         # self.checkpoint_dir = CHECKPOINT_DIR
         # self.checkpoint_prefix = os.path.join(self.checkpoint_dir, 'ckpt')
