@@ -34,7 +34,7 @@ class DQN():
                 keras.layers.Dense(32, activation='relu'),
                 keras.layers.Dense(5),
             ])
-        self.optimizer = keras.optimizers.Adam()
+            self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
         # self.checkpoint_dir = CHECKPOINT_DIR
         # self.checkpoint_prefix = os.path.join(self.checkpoint_dir, 'ckpt')
