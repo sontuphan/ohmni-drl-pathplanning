@@ -17,7 +17,9 @@ class DQN():
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
         # Model
-        strategy = tf.distribute.MirroredStrategy()
+        strategy = tf.distribute.MirroredStrategy(
+            cross_device_ops=tf.distribute.HierarchicalCopyAllReduce()
+        )
         with strategy.scope():
             self.model = keras.models.Sequential([  # (96, 96, *)
                 keras.layers.Conv2D(  # (92, 92, 16)
