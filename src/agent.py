@@ -35,12 +35,11 @@ class DQN():
         ])
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
-        self.checkpoint_dir = CHECKPOINT_DIR
-        self.checkpoint_prefix = os.path.join(self.checkpoint_dir, 'ckpt')
         self.checkpoint = tf.train.Checkpoint(optimizer=self.optimizer,
-                                            net=self.model)
-        self.checkpoint.restore(
-            tf.train.latest_checkpoint(self.checkpoint_dir))
+                                              net=self.model)
+        self.manager = tf.train.CheckpointManager(
+            self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
+        self.checkpoint.restore(self.manager.latest_checkpoint)
 
     def _define_collect_data_spec(self, env):
         return trajectory.from_transition(
@@ -80,5 +79,5 @@ class DQN():
         loss = self.train_step(
             step_types, states, actions, rewards, next_states)
         if step % 1000 == 0:
-            self.checkpoint.save(file_prefix=self.checkpoint_prefix)
+            self.manager.save()
         return loss
