@@ -142,7 +142,6 @@ class PyEnv(py_environment.PyEnvironment):
         _, _, rgb_img, _, seg_img = self._env.capture_image()
         img = np.array(rgb_img, dtype=np.float32)/255
         mask = np.minimum(seg_img, 1, dtype=np.float32)
-        mask = cv.cvtColor(mask, cv.COLOR_GRAY2RGB)
         return img, mask
 
     def _get_pose_state(self):
@@ -183,8 +182,10 @@ class PyEnv(py_environment.PyEnvironment):
     def _compute_reward(self):
         """ Compute reward and return (<stopped>, <reward>) """
         normalized_distance = self._normalized_distance_to_destination()
-        # Reward shaping
-        shaped_reward = 1 - normalized_distance
+        pose = self._get_pose_state()
+        heading = np.array([1, 0])
+        shaped_reward = np.inner(pose, heading) / \
+            (np.linalg.norm(pose)*np.linalg.norm(heading))
         # Ohmni reach the destination
         if normalized_distance < 0.1:
             return True, 1
@@ -192,7 +193,7 @@ class PyEnv(py_environment.PyEnvironment):
         if self._is_fatal():
             return True, -1
         # Ohmni on his way
-        return False, shaped_reward-1/self._max_steps
+        return False, shaped_reward
 
     def _reset(self):
         """ Reset environment"""
@@ -216,8 +217,7 @@ class PyEnv(py_environment.PyEnvironment):
         _mask = cv.line(_mask,
                         (int(cent[1]), int(cent[0])),
                         (int(dest[1]), int(dest[0])),
-                        (0, 1, 0), thickness=2)
-        _mask = cv.cvtColor(_mask, cv.COLOR_RGB2GRAY)
+                        (0.5), thickness=2)
         _mask = _mask[..., np.newaxis]
         self._img = _img
         self._state = self._state[:, :, 1:]
