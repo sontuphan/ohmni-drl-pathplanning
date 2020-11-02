@@ -16,6 +16,8 @@ class DQN():
         # Params
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
+        self.epsilon = 0.9
+        self._num_actions = 5
         # Model
         self.model = keras.models.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
@@ -31,7 +33,7 @@ class DQN():
             keras.layers.Flatten(),
             keras.layers.Dense(64, activation='relu'),
             keras.layers.Dense(32, activation='relu'),
-            keras.layers.Dense(5),
+            keras.layers.Dense(self._num_actions),
         ])
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
@@ -48,10 +50,24 @@ class DQN():
             env.time_step_spec(),
         )
 
+    def explore(self, actions):
+        _epsilons = tf.cast(
+            tf.greater(
+                tf.random.uniform(actions.shape, minval=0, maxval=1),
+                tf.fill(actions.shape, self.epsilon),
+            ),
+            dtype=tf.int32
+        )
+        _random_actions = tf.random.uniform(
+            actions.shape, minval=0, maxval=4, dtype=tf.int32)
+        _actions = _epsilons*_random_actions + (1-_epsilons)*actions
+        return _actions
+
     def action(self, _time_step):
         _qvalues = self.model(_time_step.observation)
-        _action = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
-        return policy_step.PolicyStep(action=_action, state=_qvalues)
+        _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
+        _actions = self.explore(_actions)
+        return policy_step.PolicyStep(action=_actions, state=_qvalues)
 
     @tf.function
     def train_step(self, step_types, states, actions, rewards, next_states):
