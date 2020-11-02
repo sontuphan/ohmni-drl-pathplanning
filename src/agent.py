@@ -16,8 +16,8 @@ class DQN():
         # Params
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
-        self.epsilon = 0.9
         self._num_actions = 5
+        self._num_step = 0
         # Model
         self.model = keras.models.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
@@ -50,11 +50,15 @@ class DQN():
             env.time_step_spec(),
         )
 
+    def epsilon(self):
+        return 0.1 * (1 - tf.exp(-0.00001 * self._num_step))
+
     def explore(self, actions):
+        print('Step {} / Epsilon {}', self._num_step, self.epsilon())
         _epsilons = tf.cast(
             tf.greater(
                 tf.random.uniform(actions.shape, minval=0, maxval=1),
-                tf.fill(actions.shape, self.epsilon),
+                tf.fill(actions.shape, self.epsilon()),
             ),
             dtype=tf.int32
         )
@@ -64,6 +68,7 @@ class DQN():
         return _actions
 
     def action(self, _time_step):
+        self._num_step += 1
         _qvalues = self.model(_time_step.observation)
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
