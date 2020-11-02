@@ -17,7 +17,7 @@ class DQN():
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
         self._num_actions = 5
-        self._num_step = 0
+        self.step = 0
         # Model
         self.model = keras.models.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
@@ -51,10 +51,10 @@ class DQN():
         )
 
     def epsilon(self):
-        return 0.1 * (1 - tf.exp(-0.00001 * self._num_step))
+        return 1 - tf.exp(-0.0001 * self.step)
 
     def explore(self, actions):
-        print('Step {} / Epsilon {}', self._num_step, self.epsilon())
+        print('Step {} / Epsilon {}', self.step, self.epsilon())
         _epsilons = tf.cast(
             tf.greater(
                 tf.random.uniform(actions.shape, minval=0, maxval=1),
@@ -68,7 +68,7 @@ class DQN():
         return _actions
 
     def action(self, _time_step):
-        self._num_step += 1
+        self.step += 1
         _qvalues = self.model(_time_step.observation)
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
@@ -88,7 +88,7 @@ class DQN():
         self.optimizer.apply_gradients(zip(gradients, variables))
         return loss
 
-    def train(self, experience, step):
+    def train(self, experience):
         states, next_states = tf.squeeze(tf.split(experience.observation,
                                                   num_or_size_splits=[1, 1], axis=1))
         actions, _ = tf.split(experience.action,
@@ -99,6 +99,6 @@ class DQN():
                                             num_or_size_splits=[1, 1], axis=1))
         loss = self.train_step(
             step_types, states, actions, rewards, next_states)
-        if step % 1000 == 0:
+        if self.step % 1000 == 0:
             self.manager.save()
         return loss

@@ -49,17 +49,16 @@ def train():
     num_iterations = 50000
     eval_step = 1000
     start = time.time()
-    step = 0
     for _ in range(num_iterations):
-        step += 1
         replay_buffer.collect_step(train_env, agent)
         experience, _ = next(dataset)
-        agent.train(experience, step)
+        agent.train(experience)
         # Evaluation
-        if step % eval_step == 0:
+        if agent.step % eval_step == 0:
             # Checkpoints
             avg_return = criterion.eval(eval_env, agent)
-            print('Step = {0}: Average Return = {1}'.format(step, avg_return))
+            print('Step = {0}: Average Return = {1}'.format(
+                agent.step, avg_return))
             end = time.time()
             print('Step estimated time: {:.4f}'.format((end-start)/eval_step))
             start = time.time()
