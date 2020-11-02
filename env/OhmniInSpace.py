@@ -186,14 +186,14 @@ class PyEnv(py_environment.PyEnvironment):
         heading = np.array([1, 0])
         shaped_reward = np.inner(pose, heading) / \
             (np.linalg.norm(pose)*np.linalg.norm(heading))
-        # Ohmni reach the destination
+        # Ohmni reaches the destination
         if normalized_distance < 0.1:
             return True, 1
         # Stop if detecting collisions or a fall
         if self._is_fatal():
             return True, -1
         # Ohmni on his way
-        return False, shaped_reward - normalized_distance
+        return False, shaped_reward - 1
 
     def _reset(self):
         """ Reset environment"""
