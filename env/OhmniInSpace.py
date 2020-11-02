@@ -188,10 +188,10 @@ class PyEnv(py_environment.PyEnvironment):
             (np.linalg.norm(pose)*np.linalg.norm(heading))
         # Ohmni reaches the destination
         if normalized_distance < 0.1:
-            return True, 1
+            return True, 200
         # Stop if detecting collisions or a fall
         if self._is_fatal():
-            return True, -1
+            return True, -200
         # Ohmni on his way
         return False, shaped_reward - 1
 
