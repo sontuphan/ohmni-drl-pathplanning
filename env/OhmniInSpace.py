@@ -191,7 +191,7 @@ class PyEnv(py_environment.PyEnvironment):
             return True, 200
         # Stop if detecting collisions or a fall
         if self._is_fatal():
-            return True, -200
+            return True, -2
         # Ohmni on his way
         return False, shaped_reward - 1
 
