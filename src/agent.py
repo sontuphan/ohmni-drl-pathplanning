@@ -50,7 +50,6 @@ class DQN():
 
     def action(self, _time_step):
         _qvalues = self.model(_time_step.observation)
-        print(_qvalues)
         _action = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         return policy_step.PolicyStep(action=_action, state=_qvalues)
 
