@@ -54,7 +54,7 @@ class DQN():
         return 1 - tf.exp(-0.0001 * self.step)
 
     def explore(self, actions):
-        print('Step {} / Epsilon {}', self.step, self.epsilon())
+        print('Step {} / Epsilon {}'.format(self.step, self.epsilon().numpy()))
         _epsilons = tf.cast(
             tf.greater(
                 tf.random.uniform(actions.shape, minval=0, maxval=1),
