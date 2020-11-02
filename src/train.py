@@ -17,7 +17,7 @@ def run():
     tfenv = OhmniInSpace.TfEnv()
     env = tfenv.gen_env(gui=LOCAL)
     # Agent
-    agent = DQN(env)
+    agent = DQN(env, training=False)
     while True:
         time_step = env.current_time_step()
         action_step = agent.action(time_step)
@@ -50,6 +50,7 @@ def train():
     eval_step = 1000
     start = time.time()
     for _ in range(num_iterations):
+        agent.increase_step()
         replay_buffer.collect_step(train_env, agent)
         experience, _ = next(dataset)
         agent.train(experience)

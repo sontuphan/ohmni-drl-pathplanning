@@ -12,12 +12,13 @@ CHECKPOINT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 
 class DQN():
-    def __init__(self, env):
+    def __init__(self, env, training=True):
         # Params
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
         self._num_actions = 5
         self.step = 0
+        self.training = training
         # Model
         self.model = keras.models.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
@@ -50,15 +51,19 @@ class DQN():
             env.time_step_spec(),
         )
 
-    def epsilon(self):
+    def _epsilon(self):
+        if not self.training:
+            return tf.constant(1, dtype=tf.float32)
         return 1 - tf.exp(-0.0001 * self.step)
 
+    def increase_step(self):
+        self.step += 1
+
     def explore(self, actions):
-        print('Step {} / Epsilon {}'.format(self.step, self.epsilon().numpy()))
         _epsilons = tf.cast(
             tf.greater(
                 tf.random.uniform(actions.shape, minval=0, maxval=1),
-                tf.fill(actions.shape, self.epsilon()),
+                tf.fill(actions.shape, self._epsilon()),
             ),
             dtype=tf.int32
         )
@@ -68,7 +73,6 @@ class DQN():
         return _actions
 
     def action(self, _time_step):
-        self.step += 1
         _qvalues = self.model(_time_step.observation)
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
