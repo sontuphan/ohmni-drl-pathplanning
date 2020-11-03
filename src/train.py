@@ -46,7 +46,7 @@ def train():
     criterion = ExpectedReturn()
 
     # Train
-    num_iterations = 50000
+    num_iterations = 1000000
     eval_step = 1000
     start = time.time()
     for _ in range(num_iterations):
