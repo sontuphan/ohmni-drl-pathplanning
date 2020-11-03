@@ -181,6 +181,9 @@ class PyEnv(py_environment.PyEnvironment):
 
     def _compute_reward(self):
         """ Compute reward and return (<stopped>, <reward>) """
+        # If exceed the limitation of steps, return rewards
+        if self._num_steps > self._max_steps:
+            return True, -200
         normalized_distance = self._normalized_distance_to_destination()
         pose = self._get_pose_state()
         heading = np.array([1, 0])
@@ -239,10 +242,6 @@ class PyEnv(py_environment.PyEnvironment):
         self._episode_ended, reward = self._compute_reward()
         if self._env.gui:
             print('Reward: {}'.format(reward))
-        # If exceed the limitation of steps, return rewards
-        if self._num_steps > self._max_steps:
-            self._episode_ended = True
-            return ts.termination(self._state, reward)
         # Transition
         if self._episode_ended:
             return ts.termination(self._state, reward)
