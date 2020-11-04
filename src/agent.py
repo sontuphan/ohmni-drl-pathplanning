@@ -54,7 +54,7 @@ class DQN():
     def _epsilon(self):
         if not self.training:
             return tf.constant(1, dtype=tf.float32)
-        return 1 - tf.exp(-0.0001 * self.step)
+        return 0.9 - tf.exp(-0.0001 * self.step)
 
     def increase_step(self):
         self.step += 1
@@ -74,6 +74,7 @@ class DQN():
 
     def action(self, _time_step):
         _qvalues = self.model(_time_step.observation)
+        # print("Q values:", _qvalues.numpy())
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
         return policy_step.PolicyStep(action=_actions, state=_qvalues)

@@ -12,7 +12,6 @@ from tf_agents.trajectories import time_step as ts
 from env.objs import floor, ohmni, obstacle
 
 VELOCITY_COEFFICIENT = 15
-THROTTLE_RANGE = [-1, 1]
 INTERPRETER = [[-0.6, -0.6], [-0.3, 0.3], [0., 0.], [0.3, -0.3], [0.6, 0.6]]
 
 
