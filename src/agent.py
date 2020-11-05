@@ -40,10 +40,9 @@ class DQN():
         # Setup checkpoints
         self.checkpoint = tf.train.Checkpoint(
             optimizer=self.optimizer,
-            net=self.model,
+            model=self.model,
             step=self.step,
         )
-        print('================', self.step.numpy())
         self.manager = tf.train.CheckpointManager(
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
@@ -81,7 +80,7 @@ class DQN():
 
     def action(self, _time_step):
         _qvalues = self.model(_time_step.observation)
-        print("Q values:", _qvalues.numpy())
+        # print("Q values:", _qvalues.numpy())
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
         return policy_step.PolicyStep(action=_actions, state=_qvalues)
