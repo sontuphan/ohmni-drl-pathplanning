@@ -47,9 +47,9 @@ class DQN():
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
         # Debug
-        # self.debug_policy = keras.models.clone_model(self.policy)
-        # for _ in range(2):
-        #     self.debug_policy.pop()
+        self.debug_policy = keras.models.clone_model(self.policy)
+        for _ in range(2):
+            self.debug_policy.pop()
 
     def _define_collect_data_spec(self, env):
         return trajectory.from_transition(
@@ -93,7 +93,7 @@ class DQN():
     def action(self, _time_step):
         _qvalues = self.policy(_time_step.observation)
         # self.debug(_time_step.observation)
-        print("Q values:", _qvalues.numpy())
+        # print("Q values:", _qvalues.numpy())
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
         return policy_step.PolicyStep(action=_actions, state=_qvalues)
