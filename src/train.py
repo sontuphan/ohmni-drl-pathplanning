@@ -61,11 +61,11 @@ def train():
         experience, _ = next(dataset)
         agent.train(experience)
         # Evaluation
-        if agent.step % eval_step == 0:
+        if agent.get_step() % eval_step == 0:
             # Checkpoints
             avg_return = criterion.eval(eval_env, agent)
             print('Step = {0}: Average Return = {1}'.format(
-                agent.step, avg_return))
+                agent.get_step(), avg_return))
             end = time.time()
             print('Step estimated time: {:.4f}'.format((end-start)/eval_step))
             start = time.time()

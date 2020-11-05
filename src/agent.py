@@ -17,10 +17,10 @@ class DQN():
         self.collect_data_spec = self._define_collect_data_spec(env)
         self.discount = 0.99
         self._num_actions = 5
-        self.step = 0
+        self.step = tf.Variable(initial_value=0, dtype=tf.float32, name='step')
         self.training = training
         # Model
-        self.model = keras.models.Sequential([  # (96, 96, *)
+        self.model = keras.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
                 filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu',
                 input_shape=(96, 96, 3)),
@@ -38,8 +38,12 @@ class DQN():
         ])
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
-        self.checkpoint = tf.train.Checkpoint(optimizer=self.optimizer,
-                                              net=self.model)
+        self.checkpoint = tf.train.Checkpoint(
+            optimizer=self.optimizer,
+            net=self.model,
+            step=self.step,
+        )
+        print('================', self.step.numpy())
         self.manager = tf.train.CheckpointManager(
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
@@ -56,8 +60,11 @@ class DQN():
             return tf.constant(1, dtype=tf.float32)
         return 0.9 - tf.exp(-0.0001 * self.step)
 
+    def get_step(self):
+        return self.step.numpy()
+
     def increase_step(self):
-        self.step += 1
+        self.step.assign_add(1)
 
     def explore(self, actions):
         _epsilons = tf.cast(
@@ -74,7 +81,7 @@ class DQN():
 
     def action(self, _time_step):
         _qvalues = self.model(_time_step.observation)
-        # print("Q values:", _qvalues.numpy())
+        print("Q values:", _qvalues.numpy())
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
         return policy_step.PolicyStep(action=_actions, state=_qvalues)
