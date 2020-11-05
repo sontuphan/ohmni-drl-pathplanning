@@ -3,11 +3,11 @@ from tf_agents.trajectories import trajectory
 
 
 class ReplayBuffer:
-    def __init__(self, data_spec, batch_size=1, sample_batch_size=256):
+    def __init__(self, data_spec, batch_size=1, sample_batch_size=32):
         self.data_spec = data_spec
         self.batch_size = batch_size
         self.sample_batch_size = sample_batch_size
-        self.replay_buffer_capacity = int(sample_batch_size * 8)
+        self.replay_buffer_capacity = int(sample_batch_size * 16)
         self.buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
             data_spec=self.data_spec,
             batch_size=self.batch_size,

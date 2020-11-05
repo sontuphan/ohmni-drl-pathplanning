@@ -115,7 +115,7 @@ class PyEnv(py_environment.PyEnvironment):
         super(PyEnv, self).__init__()
         # Parameters
         self.image_shape = image_shape
-        self.image_stack = self.image_shape + (4,)
+        self.image_stack = self.image_shape + (3,)
         self._num_of_obstacles = 20
         self._max_steps = 500
         # PyEnvironment variables

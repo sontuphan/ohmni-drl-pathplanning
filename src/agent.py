@@ -23,7 +23,7 @@ class DQN():
         self.model = keras.models.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
                 filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu',
-                input_shape=(96, 96, 4)),
+                input_shape=(96, 96, 3)),
             keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
             keras.layers.Conv2D(  # (42, 42, 32)
                 filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),

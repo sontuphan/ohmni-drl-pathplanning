@@ -1,5 +1,7 @@
 import time
 import tensorflow as tf
+import cv2 as cv
+import numpy as np
 
 from env import OhmniInSpace
 from src.agent import DQN
@@ -20,6 +22,10 @@ def run():
     agent = DQN(env, training=False)
     while True:
         time_step = env.current_time_step()
+        observation = np.squeeze(time_step.observation.numpy())
+        cv.imshow('Segmentation', observation)
+        if cv.waitKey(10) & 0xFF == ord('q'):
+            break
         action_step = agent.action(time_step)
         env.step(action_step.action)
 
