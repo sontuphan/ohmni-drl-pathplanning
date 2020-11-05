@@ -34,7 +34,7 @@ class DQN():
             keras.layers.Flatten(),
             keras.layers.Dense(64, activation='relu'),
             keras.layers.Dense(32, activation='relu'),
-            keras.layers.Dense(num_actions),
+            keras.layers.Dense(self._num_actions),
         ])
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
