@@ -239,8 +239,6 @@ class PyEnv(py_environment.PyEnvironment):
         # Compute and save states
         self._compute_state()
         self._episode_ended, reward = self._compute_reward()
-        if self._env.gui:
-            print('Reward: {}'.format(reward))
         # Transition
         if self._episode_ended:
             return ts.termination(self._state, reward)
