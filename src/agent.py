@@ -11,10 +11,16 @@ CHECKPOINT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               '../models/checkpoints')
 
 
-class Policy(keras.Model):
-    def __init__(self, num_actions):
-        super(Policy, self).__init__()
-        self.cnn = keras.Sequential([  # (96, 96, *)
+class DQN():
+    def __init__(self, env, training=True):
+        # Params
+        self.collect_data_spec = self._define_collect_data_spec(env)
+        self.discount = 0.99
+        self._num_actions = 5
+        self.step = tf.Variable(initial_value=0, dtype=tf.float32, name='step')
+        self.training = training
+        # Model
+        self.policy = keras.Sequential([  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
                 filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu',
                 input_shape=(96, 96, 3)),
@@ -30,21 +36,6 @@ class Policy(keras.Model):
             keras.layers.Dense(32, activation='relu'),
             keras.layers.Dense(num_actions),
         ])
-
-    def call(self, x):
-        return self.cnn(x)
-
-
-class DQN():
-    def __init__(self, env, training=True):
-        # Params
-        self.collect_data_spec = self._define_collect_data_spec(env)
-        self.discount = 0.99
-        self._num_actions = 5
-        self.step = tf.Variable(initial_value=0, dtype=tf.float32, name='step')
-        self.training = training
-        # Model
-        self.policy = Policy(self._num_actions)
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
         self.checkpoint = tf.train.Checkpoint(
@@ -53,7 +44,7 @@ class DQN():
             step=self.step,
         )
         self.manager = tf.train.CheckpointManager(
-            self.checkpoint, CHECKPOINT_DIR, max_to_keep=2)
+            self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
 
     def _define_collect_data_spec(self, env):
@@ -89,7 +80,7 @@ class DQN():
 
     def action(self, _time_step):
         _qvalues = self.policy(_time_step.observation)
-        # print("Q values:", _qvalues.numpy())
+        print("Q values:", _qvalues.numpy())
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
         return policy_step.PolicyStep(action=_actions, state=_qvalues)
