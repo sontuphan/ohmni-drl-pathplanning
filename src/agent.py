@@ -33,11 +33,12 @@ class DQN():
                 filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
             keras.layers.MaxPooling2D((2, 2), name='conv3'),  # (5, 5, 64)
             keras.layers.Flatten(),
-            keras.layers.Dense(64, activation='sigmoid',
-                               name='attention_layer'),
+            keras.layers.Dense(256, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
-        self.optimizer = keras.optimizers.Adam()
+        self.optimizer = keras.optimizers.RMSprop(
+            learning_rate=0.00025, rho=0.95, epsilon=0.01
+        )
         # Setup checkpoints
         self.checkpoint = tf.train.Checkpoint(
             optimizer=self.optimizer,
