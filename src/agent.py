@@ -22,7 +22,7 @@ class DQN():
         self.training = training
         # Model
         self.policy = keras.Sequential([
-            keras.Input(shape=(96, 96, 3)),  # (96, 96, *)
+            keras.Input(shape=env.observation_spec().shape),  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
                 filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
             keras.layers.MaxPooling2D((2, 2), name='conv1'),  # (46, 46, 16)
@@ -33,7 +33,7 @@ class DQN():
                 filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
             keras.layers.MaxPooling2D((2, 2), name='conv3'),  # (5, 5, 64)
             keras.layers.Flatten(),
-            keras.layers.Dense(256, activation='relu', name='attention_layer'),
+            keras.layers.Dense(192, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.optimizer = keras.optimizers.RMSprop(
@@ -88,9 +88,9 @@ class DQN():
     def pay_attention(self, observation):
         v = self.extractor(observation)
         v = tf.squeeze(v)
-        v = tf.reshape(v, [8, 8])
+        v = tf.reshape(v, [8, 8, 3])
         img = v.numpy()
-        cv.imshow('Debug', img)
+        cv.imshow('Attention matrix', img)
         cv.waitKey(10)
 
     def action(self, _time_step):
