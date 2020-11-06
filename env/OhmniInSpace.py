@@ -12,7 +12,7 @@ from tf_agents.trajectories import time_step as ts
 from env.objs import floor, ohmni, obstacle
 
 VELOCITY_COEFFICIENT = 15
-INTERPRETER = [[-0.6, -0.6], [-0.3, 0.3], [0., 0.], [0.3, -0.3], [0.6, 0.6]]
+INTERPRETER = [[-0.4, -0.4], [-0.15, 0.15], [0., 0.], [0.15, -0.15], [0.4, 0.4]]
 
 
 class Env:

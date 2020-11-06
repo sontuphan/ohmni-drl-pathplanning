@@ -67,7 +67,7 @@ class DQN():
         return 0.9 - tf.exp(-0.0001 * self.step)
 
     def get_step(self):
-        return self.step.numpy()
+        return int(self.step.numpy())
 
     def increase_step(self):
         self.step.assign_add(1)
