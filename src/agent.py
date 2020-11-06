@@ -21,20 +21,21 @@ class DQN():
         self.step = tf.Variable(initial_value=0, dtype=tf.float32, name='step')
         self.training = training
         # Model
-        self.policy = keras.Sequential([  # (96, 96, *)
+        self.policy = keras.Sequential([
+            keras.Input(shape=(96, 96, 3)),  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
-                filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu',
-                input_shape=(96, 96, 3)),
-            keras.layers.MaxPooling2D((2, 2)),  # (46, 46, 16)
+                filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2), name='conv1'),  # (46, 46, 16)
             keras.layers.Conv2D(  # (42, 42, 32)
                 filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
-            keras.layers.MaxPooling2D((2, 2)),  # (21, 21, 32)
+            keras.layers.MaxPooling2D((2, 2), name='conv2'),  # (21, 21, 32)
             keras.layers.Conv2D(  # (10, 10, 64)
                 filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
-            keras.layers.MaxPooling2D((2, 2)),  # (5, 5, 64)
+            keras.layers.MaxPooling2D((2, 2), name='conv3'),  # (5, 5, 64)
             keras.layers.Flatten(),
-            keras.layers.Dense(64, activation='relu'),
-            keras.layers.Dense(self._num_actions),
+            keras.layers.Dense(64, activation='sigmoid',
+                               name='attention_layer'),
+            keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
@@ -47,9 +48,10 @@ class DQN():
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
         # Debug
-        self.debug_policy = keras.models.clone_model(self.policy)
-        for _ in range(2):
-            self.debug_policy.pop()
+        self.extractor = keras.Model(
+            inputs=self.policy.inputs,
+            outputs=self.policy.get_layer(name='attention_layer').output
+        )
 
     def _define_collect_data_spec(self, env):
         return trajectory.from_transition(
@@ -82,18 +84,19 @@ class DQN():
         _actions = _epsilons*_random_actions + (1-_epsilons)*actions
         return _actions
 
-    def debug(self, observation):
-        v = self.debug_policy(observation)
+    def pay_attention(self, observation):
+        v = self.extractor(observation)
         v = tf.squeeze(v)
-        v = tf.reshape(v, [4, 4, 4])
+        v = tf.reshape(v, [8, 8])
         img = v.numpy()
         cv.imshow('Debug', img)
         cv.waitKey(10)
 
     def action(self, _time_step):
         _qvalues = self.policy(_time_step.observation)
-        # self.debug(_time_step.observation)
-        # print("Q values:", _qvalues.numpy())
+        if not self.training:
+            self.pay_attention(_time_step.observation)
+            print("Q values:", _qvalues.numpy())
         _actions = tf.argmax(_qvalues, axis=1, output_type=tf.int32)
         _actions = self.explore(_actions)
         return policy_step.PolicyStep(action=_actions, state=_qvalues)
