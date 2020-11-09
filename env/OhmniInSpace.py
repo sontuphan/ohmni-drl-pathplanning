@@ -117,7 +117,7 @@ class PyEnv(py_environment.PyEnvironment):
         self.image_shape = image_shape
         self.image_stack = self.image_shape + (3,)
         self._num_of_obstacles = 20
-        self._max_steps = 500
+        self._max_steps = 5000
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32,  minimum=0, maximum=4, name='action')
