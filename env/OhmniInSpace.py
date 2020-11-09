@@ -182,21 +182,21 @@ class PyEnv(py_environment.PyEnvironment):
         """ Compute reward and return (<stopped>, <reward>) """
         # If exceed the limitation of steps, return rewards
         if self._num_steps > self._max_steps:
-            return True, -200
-        normalized_distance = self._normalized_distance_to_destination()
+            return True, -1
         pose = self._get_pose_state()
         heading = np.array([1, 0])
         shaped_reward = np.inner(pose, heading) / \
             (np.linalg.norm(pose)*np.linalg.norm(heading))
         # Ohmni reaches the destination
+        normalized_distance = self._normalized_distance_to_destination()
         if normalized_distance < 0.1:
             # The reward should be defined based on the discount
-            return True, 200
+            return True, 1
         # Stop if detecting collisions or a fall
         if self._is_fatal():
-            return True, -200
+            return True, -1
         # Ohmni on his way
-        return False, shaped_reward - 1
+        return False, 0
 
     def _reset(self):
         """ Reset environment"""
