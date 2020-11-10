@@ -53,7 +53,7 @@ def train():
 
     # Train
     num_iterations = 1000000
-    eval_step = 1000
+    eval_step = 5000
     start = time.time()
     for _ in range(num_iterations):
         agent.increase_step()
