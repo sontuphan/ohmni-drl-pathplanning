@@ -12,7 +12,8 @@ from tf_agents.trajectories import time_step as ts
 from env.objs import floor, ohmni, obstacle
 
 VELOCITY_COEFFICIENT = 15
-INTERPRETER = [[-0.4, -0.4], [-0.15, 0.15], [0., 0.], [0.15, -0.15], [0.4, 0.4]]
+INTERPRETER = [[-0.4, -0.4], [-0.15, 0.15],
+               [0., 0.], [0.15, -0.15], [0.4, 0.4]]
 
 
 class Env:
@@ -194,9 +195,9 @@ class PyEnv(py_environment.PyEnvironment):
             return True, 1
         # Stop if detecting collisions or a fall
         if self._is_fatal():
-            return True, normalized_distance-1
+            return True, -1
         # Ohmni on his way
-        return False, 0
+        return False, normalized_distance-1
 
     def _reset(self):
         """ Reset environment"""
