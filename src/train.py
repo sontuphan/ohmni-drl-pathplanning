@@ -55,7 +55,7 @@ def train():
     num_iterations = 1000000
     eval_step = 5000
     start = time.time()
-    for _ in range(num_iterations):
+    while agent.get_step() <= num_iterations:
         agent.increase_step()
         replay_buffer.collect_step(train_env, agent)
         experience, _ = next(dataset)
