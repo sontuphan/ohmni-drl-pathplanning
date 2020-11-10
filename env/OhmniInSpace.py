@@ -194,7 +194,7 @@ class PyEnv(py_environment.PyEnvironment):
             return True, 1
         # Stop if detecting collisions or a fall
         if self._is_fatal():
-            return True, -1
+            return True, normalized_distance-1
         # Ohmni on his way
         return False, 0
 
