@@ -32,6 +32,7 @@ class DQN():
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.trainable = self.training
+        self.policy.summary()
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
         self.checkpoint = tf.train.Checkpoint(
