@@ -29,7 +29,7 @@ class DQN():
             keras.layers.Dense(192, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
-        self.policy.trainable = self.training
+        self.policy.layers[0].trainable = False
         self.policy.summary()
         self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
