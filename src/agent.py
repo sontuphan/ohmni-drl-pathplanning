@@ -22,9 +22,7 @@ class DQN():
         self.training = training
         # Model
         self.policy = keras.Sequential([
-            tf.keras.applications.MobileNetV2(input_shape=env.observation_spec().shape,
-                                              include_top=False,
-                                              weights='imagenet'),
+            keras.layers.Input(shpae=env.observation_spec().shape),
             keras.layers.Flatten(),
             keras.layers.Dense(192, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
