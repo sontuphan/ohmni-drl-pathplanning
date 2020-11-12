@@ -22,7 +22,7 @@ class DQN():
         self.training = training
         # Model
         self.policy = keras.Sequential([
-            keras.layers.Input(shpae=env.observation_spec().shape),
+            keras.layers.Input(shape=env.observation_spec().shape),
             keras.layers.Flatten(),
             keras.layers.Dense(192, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
