@@ -22,12 +22,19 @@ class DQN():
         self.training = training
         # Model
         self.policy = keras.Sequential([
-            tf.keras.applications.MobileNetV2(input_shape=env.observation_spec().shape,
-                                              include_top=False,
-                                              weights='imagenet'),
+            keras.Input(shape=env.observation_spec().shape),  # (96, 96, *)
+            keras.layers.Conv2D(  # (92, 92, 16)
+                filters=16, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2), name='conv1'),  # (46, 46, 16)
+            keras.layers.Conv2D(  # (42, 42, 32)
+                filters=32, kernel_size=(5, 5), strides=(1, 1), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2), name='conv2'),  # (21, 21, 32)
+            keras.layers.Conv2D(  # (10, 10, 64)
+                filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
+            keras.layers.MaxPooling2D((2, 2), name='conv3'),  # (5, 5, 64)
             keras.layers.Flatten(),
-            keras.layers.Dense(768, activation='relu', name='attention_layer_1'),
-            keras.layers.Dense(192, activation='relu', name='attention_layer_2'),
+            keras.layers.Dense(768, activation='relu'),
+            keras.layers.Dense(192, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.layers[0].trainable = False
@@ -45,7 +52,7 @@ class DQN():
         # Debug
         self.extractor = keras.Model(
             inputs=self.policy.inputs,
-            outputs=self.policy.get_layer(name='attention_layer_2').output
+            outputs=self.policy.get_layer(name='attention_layer').output
         )
 
     def _define_collect_data_spec(self, env):

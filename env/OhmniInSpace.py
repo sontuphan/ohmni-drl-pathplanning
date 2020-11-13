@@ -197,7 +197,7 @@ class PyEnv(py_environment.PyEnvironment):
         if self._is_fatal():
             return True, -100
         # Ohmni on his way
-        return False, -1
+        return False, -normalized_distance
 
     def _reset(self):
         """ Reset environment"""
@@ -216,13 +216,14 @@ class PyEnv(py_environment.PyEnvironment):
         _pose = self._get_pose_state()  # Pose state
         # Gamifying
         (h, w) = self.image_shape
-        cent = np.array([w/2, h/2], dtype=np.float32)
-        dest = -_pose*1000 + cent  # Transpose/Scale/Tranform
-        _color = 0.5
-        _thickness = 4
+        _cent = np.array([w/2, h/2], dtype=np.float32)
+        _dest = -_pose*1000 + _cent  # Transpose/Scale/Tranform
+        normalized_distance = self._normalized_distance_to_destination()
+        _color = normalized_distance - 0.05
+        _thickness = 5  # Max conv kenel size
         _mask = cv.line(_mask,
-                        (int(cent[1]), int(cent[0])),
-                        (int(dest[1]), int(dest[0])),
+                        (int(_cent[1]), int(_cent[0])),
+                        (int(_dest[1]), int(_dest[0])),
                         _color, thickness=_thickness)
         _mask = _mask[..., np.newaxis]
         self._img = _img
