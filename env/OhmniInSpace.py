@@ -197,7 +197,7 @@ class PyEnv(py_environment.PyEnvironment):
         if self._is_fatal():
             return True, -100
         # Ohmni on his way
-        return False, -normalized_distance
+        return False, -1
 
     def _reset(self):
         """ Reset environment"""
