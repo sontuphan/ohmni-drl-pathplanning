@@ -26,8 +26,8 @@ class DQN():
                                               include_top=False,
                                               weights='imagenet'),
             keras.layers.Flatten(),
-            keras.layers.Dense(192, activation='sigmoid',
-                               name='attention_layer'),
+            keras.layers.Dense(512, activation='relu', name='attention_layer'),
+            keras.layers.Dense(192, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.layers[0].trainable = False
