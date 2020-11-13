@@ -26,8 +26,8 @@ class DQN():
                                               include_top=False,
                                               weights='imagenet'),
             keras.layers.Flatten(),
-            keras.layers.Dense(512, activation='relu', name='attention_layer'),
-            keras.layers.Dense(192, activation='relu', name='attention_layer'),
+            keras.layers.Dense(768, activation='relu', name='attention_layer_1'),
+            keras.layers.Dense(192, activation='relu', name='attention_layer_2'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.layers[0].trainable = False
@@ -45,7 +45,7 @@ class DQN():
         # Debug
         self.extractor = keras.Model(
             inputs=self.policy.inputs,
-            outputs=self.policy.get_layer(name='attention_layer').output
+            outputs=self.policy.get_layer(name='attention_layer_2').output
         )
 
     def _define_collect_data_spec(self, env):
