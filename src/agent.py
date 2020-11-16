@@ -33,8 +33,7 @@ class DQN():
                 filters=64, kernel_size=(3, 3), strides=(2, 2), activation='relu'),
             keras.layers.MaxPooling2D((2, 2), name='conv3'),  # (5, 5, 64)
             keras.layers.Flatten(),
-            keras.layers.Dense(768, activation='relu', name='attention_layer'),
-            keras.layers.Dense(192, activation='relu'),
+            keras.layers.Dense(192, activation='relu', name='attention_layer'),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.summary()
@@ -90,7 +89,7 @@ class DQN():
         v = tf.squeeze(v)
         mean, variance = tf.nn.moments(v, axes=[0])
         v = (v - mean)/tf.sqrt(variance)
-        v = tf.reshape(v, [16, 16, 3])
+        v = tf.reshape(v, [8, 8, 3])
         img = v.numpy()
         cv.imshow('Attention matrix', img)
         cv.waitKey(10)
