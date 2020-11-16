@@ -192,12 +192,12 @@ class PyEnv(py_environment.PyEnvironment):
         normalized_distance = self._normalized_distance_to_destination()
         if normalized_distance < 0.1:
             # The reward should be defined based on the discount
-            return True, 500
+            return True, 1
         # Stop if detecting collisions or a fall
         if self._is_fatal():
-            return True, 1-normalized_distance
+            return True, (1-normalized_distance)/self._max_steps
         # Ohmni on his way
-        return False, 1-normalized_distance
+        return False, (1-normalized_distance)/self._max_steps
 
     def _reset(self):
         """ Reset environment"""
