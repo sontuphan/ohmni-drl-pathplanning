@@ -118,7 +118,7 @@ class PyEnv(py_environment.PyEnvironment):
         self.image_shape = image_shape
         self.image_stack = self.image_shape + (3,)
         self._num_of_obstacles = 20
-        self._max_steps = 1000
+        self._max_steps = 500
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32,  minimum=0, maximum=4, name='action')
@@ -192,12 +192,12 @@ class PyEnv(py_environment.PyEnvironment):
         normalized_distance = self._normalized_distance_to_destination()
         if normalized_distance < 0.1:
             # The reward should be defined based on the discount
-            return True, 100
+            return True, 500
         # Stop if detecting collisions or a fall
         if self._is_fatal():
-            return True, -100
+            return True, -500
         # Ohmni on his way
-        return False, -normalized_distance
+        return False, 1-normalized_distance
 
     def _reset(self):
         """ Reset environment"""
