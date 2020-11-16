@@ -87,6 +87,7 @@ class DQN():
     def pay_attention(self, observation):
         v = self.extractor(observation)
         v = tf.squeeze(v)
+        print(v)
         mean, variance = tf.nn.moments(v, axes=[0])
         v = (v - mean)/tf.sqrt(variance)
         v = tf.reshape(v, [8, 8, 3])
