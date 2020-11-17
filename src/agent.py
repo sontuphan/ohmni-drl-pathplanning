@@ -24,16 +24,20 @@ class DQN():
         self.policy = keras.Sequential([
             keras.Input(shape=env.observation_spec().shape),  # (96, 96, *)
             keras.layers.Conv2D(  # (92, 92, 16)
-                filters=16, kernel_size=(5, 5), strides=(1, 1), activation='elu'),
+                filters=16, kernel_size=(5, 5), strides=(1, 1)),
+            keras.layers.LeakyReLU(),
             keras.layers.MaxPooling2D((2, 2), name='conv1'),  # (46, 46, 16)
             keras.layers.Conv2D(  # (42, 42, 32)
-                filters=32, kernel_size=(5, 5), strides=(1, 1), activation='elu'),
+                filters=32, kernel_size=(5, 5), strides=(1, 1)),
+            keras.layers.LeakyReLU(),
             keras.layers.MaxPooling2D((2, 2), name='conv2'),  # (21, 21, 32)
             keras.layers.Conv2D(  # (10, 10, 64)
-                filters=64, kernel_size=(3, 3), strides=(2, 2), activation='elu'),
+                filters=64, kernel_size=(3, 3), strides=(2, 2)),
+            keras.layers.LeakyReLU(),
             keras.layers.MaxPooling2D((2, 2), name='conv3'),  # (5, 5, 64)
             keras.layers.Flatten(),
-            keras.layers.Dense(192, activation='elu', name='attention_layer'),
+            keras.layers.Dense(192, name='attention_layer'),
+            keras.layers.LeakyReLU(),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.summary()
