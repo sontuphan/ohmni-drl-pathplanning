@@ -226,7 +226,7 @@ class PyEnv(py_environment.PyEnvironment):
                         (int(_cent[1]), int(_cent[0])),
                         (int(_dest[1]), int(_dest[0])),
                         _color, thickness=_thickness)
-        _mask = _mask[..., np.newaxis]
+        _mask = _mask[..., np.newaxis]-0.5 # Try to fix dead neurals
         self._img = _img
         self._state = self._state[:, :, 1:]
         self._state = np.append(self._state, _mask, axis=2)
