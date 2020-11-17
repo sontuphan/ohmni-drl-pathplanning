@@ -41,7 +41,7 @@ class DQN():
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.summary()
-        self.optimizer = keras.optimizers.Adam()
+        self.optimizer = keras.optimizers.Adam(learning_rate=0.0001)
         # Setup checkpoints
         self.checkpoint = tf.train.Checkpoint(
             optimizer=self.optimizer,
@@ -91,7 +91,6 @@ class DQN():
     def pay_attention(self, observation):
         v = self.extractor(observation)
         v = tf.squeeze(v)
-        print(v)
         mean, variance = tf.nn.moments(v, axes=[0])
         v = (v - mean)/tf.sqrt(variance)
         v = tf.reshape(v, [8, 8, 3])
