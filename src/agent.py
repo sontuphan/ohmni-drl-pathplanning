@@ -52,7 +52,11 @@ class DQN():
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
         # Stable training
-        self.target_policy = self.policy.clone_model()
+        self._policy_model = keras.Model(
+            inputs=self.policy.inputs,
+            outputs=self.policy.get_layer(name='action_layer').output
+        )
+        self.target_policy = self._policy_model.clone_model()
         # Debug
         self.extractor = keras.Model(
             inputs=self.policy.inputs,
