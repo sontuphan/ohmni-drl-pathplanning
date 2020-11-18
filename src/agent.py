@@ -41,7 +41,7 @@ class DQN():
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.summary()
-        self.optimizer = keras.optimizers.Adam(learning_rate=0.0001)
+        self.optimizer = keras.optimizers.Adam()
         # Setup checkpoints
         self.checkpoint = tf.train.Checkpoint(
             optimizer=self.optimizer,
@@ -51,6 +51,8 @@ class DQN():
         self.manager = tf.train.CheckpointManager(
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
+        # Stable training
+        self.target_policy = self.policy.clone_model()
         # Debug
         self.extractor = keras.Model(
             inputs=self.policy.inputs,
@@ -111,7 +113,7 @@ class DQN():
     def train_step(self, step_types, states, actions, rewards, next_states):
         with tf.GradientTape() as tape:
             q_values = tf.gather_nd(self.policy(states), actions, batch_dims=1)
-            next_q_values = tf.reduce_max(self.policy(next_states), axis=1)
+            next_q_values = tf.reduce_max(self.target_policy(next_states), axis=1)
             step_types = tf.cast(
                 tf.less(step_types, time_step.StepType.LAST), dtype=tf.float32)
             q_targets = rewards + self.discount*next_q_values*step_types
@@ -133,5 +135,6 @@ class DQN():
         loss = self.train_step(
             step_types, states, actions, rewards, next_states)
         if self.step % 1000 == 0:
+            self.target_policy = self.policy.clone_model()
             self.manager.save()
         return loss
