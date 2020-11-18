@@ -52,11 +52,7 @@ class DQN():
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
         # Stable training
-        self._policy_model = keras.Model(
-            inputs=self.policy.inputs,
-            outputs=self.policy.get_layer(name='action_layer').output
-        )
-        self.target_policy = self._policy_model.clone_model()
+        self.target_policy = keras.models.clone_model(self.policy)
         # Debug
         self.extractor = keras.Model(
             inputs=self.policy.inputs,
@@ -117,7 +113,8 @@ class DQN():
     def train_step(self, step_types, states, actions, rewards, next_states):
         with tf.GradientTape() as tape:
             q_values = tf.gather_nd(self.policy(states), actions, batch_dims=1)
-            next_q_values = tf.reduce_max(self.target_policy(next_states), axis=1)
+            next_q_values = tf.reduce_max(
+                self.target_policy(next_states), axis=1)
             step_types = tf.cast(
                 tf.less(step_types, time_step.StepType.LAST), dtype=tf.float32)
             q_targets = rewards + self.discount*next_q_values*step_types
