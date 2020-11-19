@@ -138,4 +138,4 @@ class DQN():
         if self.step % 1000 == 0:
             self.target_policy = keras.models.clone_model(self.policy)
             self.manager.save()
-        return loss
+        return loss.numpy()
