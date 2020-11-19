@@ -36,12 +36,16 @@ class DQN():
             keras.layers.LeakyReLU(),
             keras.layers.MaxPooling2D((2, 2), name='conv3'),  # (5, 5, 64)
             keras.layers.Flatten(),
+            keras.layers.Dense(768),
+            keras.layers.LeakyReLU(),
             keras.layers.Dense(192, name='attention_layer'),
             keras.layers.LeakyReLU(),
             keras.layers.Dense(self._num_actions, name='action_layer'),
         ])
         self.policy.summary()
-        self.optimizer = keras.optimizers.Adam()
+        self.learning_rate = 0.001
+        self.optimizer = keras.optimizers.Adam(
+            learning_rate=self.learning_rate)
         # Setup checkpoints
         self.checkpoint = tf.train.Checkpoint(
             optimizer=self.optimizer,
@@ -52,7 +56,8 @@ class DQN():
             self.checkpoint, CHECKPOINT_DIR, max_to_keep=1)
         self.checkpoint.restore(self.manager.latest_checkpoint)
         # Stable training
-        self.target_policy = keras.models.clone_model(self.policy)
+        if self.training:
+            self.target_policy = keras.models.clone_model(self.policy)
         # Debug
         self.extractor = keras.Model(
             inputs=self.policy.inputs,
@@ -133,8 +138,9 @@ class DQN():
                                          num_or_size_splits=[1, 1], axis=1))
         step_types, _ = tf.squeeze(tf.split(experience.step_type,
                                             num_or_size_splits=[1, 1], axis=1))
-        loss = self.train_step(
-            step_types, states, actions, rewards, next_states)
+        while loss > self.learning_rate:
+            loss = self.train_step(
+                step_types, states, actions, rewards, next_states)
         if self.step % 1000 == 0:
             self.target_policy = keras.models.clone_model(self.policy)
             self.manager.save()
