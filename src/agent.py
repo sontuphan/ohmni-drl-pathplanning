@@ -138,11 +138,11 @@ class DQN():
                                          num_or_size_splits=[1, 1], axis=1))
         step_types, _ = tf.squeeze(tf.split(experience.step_type,
                                             num_or_size_splits=[1, 1], axis=1))
-        while True:
+        loss = self.train_step(
+            step_types, states, actions, rewards, next_states)
+        while loss > self.learning_rate:
             loss = self.train_step(
                 step_types, states, actions, rewards, next_states)
-            if loss < self.learning_rate:
-                break
         if self.step % 1000 == 0:
             self.target_policy = keras.models.clone_model(self.policy)
             self.manager.save()
