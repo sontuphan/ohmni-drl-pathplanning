@@ -123,7 +123,7 @@ class DQN():
             step_types = tf.cast(
                 tf.less(step_types, time_step.StepType.LAST), dtype=tf.float32)
             q_targets = rewards + self.discount*next_q_values*step_types
-            loss = tf.reduce_sum(tf.square(q_values-q_targets))
+            loss = tf.reduce_mean(tf.square(q_values-q_targets))
         variables = self.policy.trainable_variables
         gradients = tape.gradient(loss, variables)
         self.optimizer.apply_gradients(zip(gradients, variables))
@@ -140,9 +140,6 @@ class DQN():
                                             num_or_size_splits=[1, 1], axis=1))
         loss = self.train_step(
             step_types, states, actions, rewards, next_states)
-        while loss > self.learning_rate:
-            loss = self.train_step(
-                step_types, states, actions, rewards, next_states)
         if self.step % 1000 == 0:
             self.target_policy = keras.models.clone_model(self.policy)
             self.manager.save()
