@@ -48,7 +48,7 @@ class Env:
 
     def _randomize_destination(self):
         # destination = (np.random.rand(2)*20-10).astype(dtype=np.float32)
-        destination([9, 9], dtype=np.float32)
+        destination = np.array([9, 9], dtype=np.float32)
         p.addUserDebugLine(
             np.append(destination, 0.),  # From
             np.append(destination, 3.),  # To
