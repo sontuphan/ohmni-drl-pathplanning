@@ -124,7 +124,7 @@ class PyEnv(py_environment.PyEnvironment):
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32,  minimum=0, maximum=4, name='action')
         self._observation_spec = array_spec.BoundedArraySpec(
-            shape=self.image_stack, dtype=np.float32,
+            shape=(2,), dtype=np.float32,
             minimum=0, maximum=1, name='observation')
         # Init bullet server
         self._env = Env(
@@ -217,20 +217,23 @@ class PyEnv(py_environment.PyEnvironment):
         _img, _mask = self._get_image_state()  # Image state
         _pose = self._get_pose_state()  # Pose state
         # Gamifying
-        (h, w) = self.image_shape
-        _cent = np.array([w/2, h/2], dtype=np.float32)
-        _dest = -_pose*1000 + _cent  # Transpose/Scale/Tranform
-        normalized_distance = self._normalized_distance_to_destination()
-        _color = normalized_distance - 0.05
-        _thickness = 5  # Max conv kenel size
-        _mask = cv.line(_mask,
-                        (int(_cent[1]), int(_cent[0])),
-                        (int(_dest[1]), int(_dest[0])),
-                        _color, thickness=_thickness)
-        _mask = _mask[..., np.newaxis]
+        # (h, w) = self.image_shape
+        # _cent = np.array([w/2, h/2], dtype=np.float32)
+        # _dest = -_pose*1000 + _cent  # Transpose/Scale/Tranform
+        # normalized_distance = self._normalized_distance_to_destination()
+        # _color = normalized_distance - 0.05
+        # _thickness = 5  # Max conv kenel size
+        # _mask = cv.line(_mask,
+        #                 (int(_cent[1]), int(_cent[0])),
+        #                 (int(_dest[1]), int(_dest[0])),
+        #                 _color, thickness=_thickness)
+        # _mask = _mask[..., np.newaxis]
+        # self._img = _img
+        # self._state = self._state[:, :, 1:]
+        # self._state = np.append(self._state, _mask, axis=2)
+        # Simplying
         self._img = _img
-        self._state = self._state[:, :, 1:]
-        self._state = np.append(self._state, _mask, axis=2)
+        self._state = _pose
 
     def _step(self, action):
         """ Step, action is velocities of left/right wheel """
