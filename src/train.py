@@ -1,3 +1,4 @@
+import os
 import time
 import tensorflow as tf
 import cv2 as cv
@@ -17,22 +18,28 @@ tf.compat.v1.enable_v2_behavior()
 # GPUs: tranning servers
 LOCAL = not len(tf.config.list_physical_devices('GPU')) > 0
 
+# Saving dir
+POLICY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '../models/policy')
+CHECKPOINT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              '../models/checkpoints')
+
 
 def run():
-    # # Environment
-    # tfenv = OhmniInSpace.TfEnv()
-    # env = tfenv.gen_env(gui=LOCAL)
-    # # Agent
-    # agent = DQN(env, training=False)
-    # while True:
-    #     time_step = env.current_time_step()
-    #     observation = np.squeeze(time_step.observation.numpy())
-    #     cv.imshow('Segmentation', observation)
-    #     if cv.waitKey(10) & 0xFF == ord('q'):
-    #         break
-    #     action_step = agent.action(time_step)
-    #     env.step(action_step.action)
-    pass
+    # Environment
+    tfenv = OhmniInSpace.TfEnv()
+    env = tfenv.gen_env(gui=LOCAL)
+    # Agent
+    dqn = DQN(env, CHECKPOINT_DIR)
+    dqn.load_checkpoint()
+    while True:
+        time_step = env.current_time_step()
+        observation = np.squeeze(time_step.observation.numpy())
+        cv.imshow('Segmentation', observation)
+        if cv.waitKey(10) & 0xFF == ord('q'):
+            break
+        action_step = dqn.agent.policy.action(time_step)
+        env.step(action_step.action)
 
 
 def train():
@@ -42,20 +49,17 @@ def train():
     eval_env = tfenv.gen_env()
 
     # Agent
-    algo = DQN(train_env)
-    train_step_counter = tf.Variable(0)
-    agent = algo.gen_agent(train_step_counter)
+    dqn = DQN(train_env, CHECKPOINT_DIR)
 
     # Replay buffer
     replay_buffer = ReplayBuffer(
-        agent.collect_data_spec,
+        dqn.agent.collect_data_spec,
         batch_size=train_env.batch_size,
         sample_batch_size=8,
     )
 
     # Metrics and Evaluation
-    agent.train = common.function(agent.train)
-    agent.train_step_counter.assign(0)
+    dqn.agent.train = common.function(dqn.agent.train)
     criterion = ExpectedReturn()
 
     # Train
@@ -63,17 +67,19 @@ def train():
     eval_step = 5000
     start = time.time()
     loss = 0
-    replay_buffer.collect_step(train_env, agent.collect_policy)
+    replay_buffer.collect_step(train_env, dqn.agent.collect_policy)
     dataset = replay_buffer.pipeline()
-    while agent.train_step_counter.numpy() <= num_iterations:
-        replay_buffer.collect_step(train_env, agent.collect_policy)
+    while dqn.agent.train_step_counter.numpy() <= num_iterations:
+        replay_buffer.collect_step(train_env, dqn.agent.collect_policy)
         experience, _ = next(dataset)
-        loss += agent.train(experience).loss
+        loss += dqn.agent.train(experience).loss
         # Evaluation
-        step = agent.train_step_counter.numpy()
+        step = dqn.agent.train_step_counter.numpy()
         if step % eval_step == 0:
             # Checkpoints
-            avg_return = criterion.eval(eval_env, agent.policy)
+            dqn.save_checkpoint()
+            # Evaluation
+            avg_return = criterion.eval(eval_env, dqn.agent.policy)
             print('Step = {0}: Average Return = {1} / Average Loss = {2}'.format(
                 step, avg_return, loss/eval_step))
             end = time.time()
