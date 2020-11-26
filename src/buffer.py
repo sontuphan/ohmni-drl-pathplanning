@@ -33,16 +33,6 @@ class ReplayBuffer:
         # Step
         self.collect(env, policy)
 
-    def collect_episode(self, env, policy, num_episodes=1):
-        """ Usually for REINFORCE """
-        episode_counter = 0
-        env.reset()
-        self.buffer.clear()
-        while episode_counter < num_episodes:
-            traj = self.collect(env, policy)
-            if traj.is_boundary():
-                episode_counter += 1
-
     def pipeline(self, num_parallel_calls=3, num_steps=2, num_prefetch=3):
         dataset = self.buffer.as_dataset(
             num_parallel_calls=num_parallel_calls,
