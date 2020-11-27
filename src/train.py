@@ -39,6 +39,7 @@ def run():
         if cv.waitKey(10) & 0xFF == ord('q'):
             break
         action_step = dqn.agent.policy.action(time_step)
+        print('Acction:', action_step.action.numpy())
         env.step(action_step.action)
 
 
