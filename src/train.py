@@ -65,11 +65,10 @@ def train():
 
     # Train
     num_iterations = 1000000
-    eval_step = 5000
+    eval_step = 1000
     start = time.time()
     loss = 0
     while ppo.agent.train_step_counter.numpy() <= num_iterations:
-        print(ppo.agent.train_step_counter.numpy())
         replay_buffer.collect_episode(train_env, ppo.agent.collect_policy)
         experience = replay_buffer.gather_all()
         loss += ppo.agent.train(experience).loss
