@@ -16,7 +16,6 @@ class PPO():
         )
         self.value_net = value_network.ValueNetwork(
             self.env.observation_spec(),
-            self.env.action_spec(),
             fc_layer_params=(128,)
         )
         # Agent
