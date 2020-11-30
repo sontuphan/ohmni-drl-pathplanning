@@ -17,7 +17,7 @@ class DQN():
         )
         # Agent
         self.global_step = tf.compat.v1.train.get_or_create_global_step()
-        self.optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=0.00025)
+        self.optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=0.000025)
         self.agent = dqn.dqn_agent.DqnAgent(
             self.env.time_step_spec(),
             self.env.action_spec(),
