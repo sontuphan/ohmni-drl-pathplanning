@@ -56,7 +56,7 @@ def train():
     replay_buffer = ReplayBuffer(
         ppo.agent.collect_data_spec,
         batch_size=train_env.batch_size,
-        sample_batch_size=2,
+        epochs=1,
     )
 
     # Metrics and Evaluation
@@ -69,10 +69,11 @@ def train():
     start = time.time()
     loss = 0
     while ppo.agent.train_step_counter.numpy() <= num_iterations:
-        replay_buffer.clear()
+        print(ppo.agent.train_step_counter.numpy())
         replay_buffer.collect_episode(train_env, ppo.agent.collect_policy)
         experience = replay_buffer.gather_all()
         loss += ppo.agent.train(experience).loss
+        replay_buffer.clear()
         # Evaluation
         step = ppo.agent.train_step_counter.numpy()
         if step % eval_step == 0:
