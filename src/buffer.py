@@ -16,6 +16,12 @@ class ReplayBuffer:
     def __len__(self):
         return self.buffer.num_frames()
 
+    def clear(self):
+        return self.buffer.clear()
+
+    def gather_all(self):
+        return self.buffer.gather_all()
+
     def collect(self, env, policy):
         time_step = env.current_time_step()
         action_step = policy.action(time_step)
@@ -25,17 +31,9 @@ class ReplayBuffer:
         self.buffer.add_batch(traj)
         return traj
 
-    def collect_step(self, env, policy):
-        """ Usually for DQN """
-        # Init buffer
-        while len(self) < int(self.sample_batch_size * 2):
-            self.collect(env, policy)
-        # Step
-        self.collect(env, policy)
-
-    def pipeline(self, num_parallel_calls=3, num_steps=2, num_prefetch=3):
-        dataset = self.buffer.as_dataset(
-            num_parallel_calls=num_parallel_calls,
-            sample_batch_size=self.sample_batch_size,
-            num_steps=num_steps).prefetch(num_prefetch)
-        return iter(dataset)
+    def collect_episode(self, env, policy):
+        counter = 0
+        while counter < self.sample_batch_size:
+            traj = self.collect(env, policy)
+            if traj.is_boundary():
+                counter += 1
