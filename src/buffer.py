@@ -34,7 +34,6 @@ class ReplayBuffer:
     def collect_episode(self, env, policy):
         counter = 0
         while counter < self.epochs:
-            print(len(self))
             traj = self.collect(env, policy)
             if traj.is_boundary():
                 counter += 1
