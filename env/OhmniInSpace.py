@@ -12,8 +12,6 @@ from tf_agents.trajectories import time_step as ts
 from env.objs import floor, ohmni, obstacle
 
 VELOCITY_COEFFICIENT = 15
-INTERPRETER = [[-0.4, -0.4], [-0.15, 0.15],
-               [0., 0.], [0.15, -0.15], [0.4, 0.4]]
 
 
 class Env:
@@ -97,7 +95,7 @@ class Env:
     def step(self, action):
         """ Controllers for left/right wheels which are separate """
         # Normalize velocities
-        [left_wheel, right_wheel] = INTERPRETER[action]
+        [left_wheel, right_wheel] = action
         left_wheel = left_wheel*VELOCITY_COEFFICIENT
         right_wheel = right_wheel*VELOCITY_COEFFICIENT
         # Step
@@ -122,7 +120,8 @@ class PyEnv(py_environment.PyEnvironment):
         self._max_steps = 500
         # PyEnvironment variables
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(), dtype=np.int32,  minimum=0, maximum=4, name='action')
+            shape=(2,), dtype=np.float32,
+            minimum=-1, maximum=1, name='action')
         self._observation_spec = array_spec.BoundedArraySpec(
             shape=(2,), dtype=np.float32,
             minimum=0, maximum=1, name='observation')
