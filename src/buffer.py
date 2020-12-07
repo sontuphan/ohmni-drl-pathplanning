@@ -7,7 +7,7 @@ class ReplayBuffer:
         self.data_spec = data_spec
         self.batch_size = batch_size
         self.epochs = epochs
-        self.replay_buffer_capacity = int(epochs * 16)
+        self.replay_buffer_capacity = 1000000
         self.buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
             data_spec=self.data_spec,
             batch_size=self.batch_size,
