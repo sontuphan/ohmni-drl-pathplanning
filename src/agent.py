@@ -21,7 +21,7 @@ class PPO():
         # Agent
         self.global_step = tf.compat.v1.train.get_or_create_global_step()
         self.optimizer = tf.compat.v1.train.AdamOptimizer(
-            learning_rate=0.00025)
+            learning_rate=0.001)
         self.agent = ppo.ppo_clip_agent.PPOClipAgent(
             self.env.time_step_spec(),
             self.env.action_spec(),
